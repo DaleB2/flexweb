@@ -1,34 +1,38 @@
 import Link from "next/link";
 
+const navItems = [
+  { href: "#plans", label: "Plans" },
+  { href: "#why", label: "Why Flex" },
+  { href: "#help", label: "Help" },
+];
+
 export default function Header() {
   return (
-    <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-6 lg:px-12">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 shadow-card backdrop-blur">
-          <span className="text-lg font-bold text-bottle">F</span>
-        </div>
-        <div className="flex flex-col leading-tight text-white drop-shadow">
-          <span className="text-sm font-semibold uppercase tracking-[0.35em]">Flex Mobile</span>
-          <span className="text-lg font-bold">Travel eSIMs</span>
-        </div>
+    <header className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-3 text-slate-900">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-bottle text-sm font-bold text-white">
+            FM
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Flex Mobile</span>
+            <span className="text-base font-semibold">Travel eSIMs</span>
+          </div>
+        </Link>
+        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href} className="transition hover:text-slate-900">
+              {item.label}
+            </Link>
+          ))}
+          <Link
+            href="/checkout"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+          >
+            Sign In
+          </Link>
+        </nav>
       </div>
-      <nav className="hidden items-center gap-8 text-sm font-semibold uppercase text-white/90 drop-shadow lg:flex">
-        <Link href="#destinations" className="transition hover:text-white">
-          Destinations
-        </Link>
-        <Link href="#pricing" className="transition hover:text-white">
-          Pricing
-        </Link>
-        <Link href="#help" className="transition hover:text-white">
-          Help Center
-        </Link>
-        <Link
-          href="/checkout"
-          className="rounded-full border border-white/60 bg-white/10 px-6 py-2 text-xs font-bold tracking-widest text-white shadow-sm backdrop-blur transition hover:bg-white hover:text-bottle"
-        >
-          Sign In
-        </Link>
-      </nav>
     </header>
   );
 }

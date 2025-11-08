@@ -14,10 +14,10 @@ interface CatalogResponse {
 }
 
 const featureBadges = [
-  "4G/5G Speeds",
-  "Switchless® eSIMs",
-  "Hotspot/Tethering",
-  "Best Network Guarantee",
+  "Instant activation",
+  "Use on unlocked phones",
+  "Keep WhatsApp active",
+  "Share hotspot",
 ];
 
 export default function PlanCard() {
@@ -121,65 +121,54 @@ export default function PlanCard() {
   }, [activePlan, countryCode, countryName, currency, markupPct, router]);
 
   return (
-    <div className="relative flex flex-col gap-6 rounded-[20px] bg-white/90 p-6 shadow-card backdrop-blur-xl lg:p-8">
+    <div className="flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-bottle/60">
-            <span>Countries</span>
-            <span className="rounded-full bg-bottle/10 px-3 py-1 text-[10px]">190+</span>
-          </div>
-          <h2 className="text-2xl font-extrabold text-bottle lg:text-3xl">Pick your destination</h2>
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Destination</p>
+          <h2 className="text-2xl font-semibold text-slate-900 lg:text-3xl">Pick where you&apos;re heading</h2>
         </div>
-        <div className="hidden flex-col items-end text-right text-xs font-semibold text-bottle/50 sm:flex">
-          <span>Powered by eSIM Access</span>
-          <span>Real-time inventory</span>
-        </div>
+        <span className="hidden text-xs font-medium text-slate-500 sm:inline">Powered by eSIM Access</span>
       </div>
 
-      <div className="flex gap-2 rounded-full bg-bottle/10 p-1 text-xs font-bold uppercase tracking-[0.3em] text-bottle/50">
+      <div className="flex gap-2 rounded-full bg-slate-100 p-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
         <button
           type="button"
           className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "unlimited" ? "bg-white text-bottle shadow" : "hover:text-bottle"
+            mode === "unlimited" ? "bg-white text-slate-900 shadow" : "hover:text-slate-700"
           }`}
           onClick={() => setMode("unlimited")}
         >
-          Unlimited Data
+          Unlimited data
         </button>
         <button
           type="button"
           className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "metered" ? "bg-white text-bottle" : "opacity-50"
+            mode === "metered" ? "bg-white text-slate-900" : "opacity-50"
           }`}
           disabled
         >
-          Pay Per GB
+          Pay per GB
         </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr]">
-        <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} />
-      </div>
+      <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {featureBadges.map((badge) => (
-          <span
-            key={badge}
-            className="inline-flex items-center justify-center rounded-full bg-mint px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-bottle shadow-sm"
-          >
+          <div key={badge} className="rounded-xl border border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">
             {badge}
-          </span>
+          </div>
         ))}
       </div>
 
       <div>
         {isLoadingPlans ? (
           <div className="space-y-4">
-            <div className="h-5 animate-pulse rounded-xl bg-bottle/10" />
-            <div className="h-24 animate-pulse rounded-2xl bg-bottle/10" />
+            <div className="h-5 animate-pulse rounded-lg bg-slate-100" />
+            <div className="h-24 animate-pulse rounded-2xl bg-slate-100" />
           </div>
         ) : error ? (
-          <div className="rounded-2xl bg-daisy/30 p-4 text-sm font-semibold text-bottle">{error}</div>
+          <div className="rounded-2xl border border-persian/30 bg-persian/5 p-4 text-sm font-semibold text-persian">{error}</div>
         ) : plans.length > 0 ? (
           <PlanSlider
             plans={plans}
@@ -189,7 +178,7 @@ export default function PlanCard() {
             onChange={setSelectedIndex}
           />
         ) : (
-          <div className="rounded-2xl bg-white/80 p-6 text-center text-sm font-semibold text-bottle/60 shadow-inner">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
             Select a destination to see available plans.
           </div>
         )}
@@ -199,15 +188,15 @@ export default function PlanCard() {
         type="button"
         onClick={handleContinue}
         disabled={!activePlan || !countryCode || isLoadingPlans}
-        className="group flex w-full items-center justify-between rounded-[18px] bg-mint px-6 py-4 text-bottle transition hover:translate-y-[-1px] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex w-full items-center justify-between rounded-2xl bg-bottle px-6 py-4 text-white transition hover:bg-bottle/90 disabled:cursor-not-allowed disabled:bg-bottle/50"
       >
         <div className="text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">Continue</p>
-          <p className="text-lg font-extrabold">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">Continue</p>
+          <p className="text-lg font-semibold">
             {activePlan ? formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency) : "Pick a plan"}
           </p>
         </div>
-        <div className="text-right text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">
+        <div className="text-right text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
           {countryCode ? countryName : "Destination"}
         </div>
       </button>
