@@ -6,6 +6,23 @@ const ESIM_SECRET = process.env.ESIM_SECRET ?? "";
 const DEFAULT_CURRENCY = process.env.DEFAULT_CURRENCY ?? "USD";
 const DEFAULT_MARKUP = Number(process.env.DEFAULT_MARKUP_PCT ?? 35);
 
+interface EsimAccessResponse {
+  success?: boolean | string | number;
+  errorMessage?: unknown;
+  obj?: {
+    packageList?: unknown;
+  };
+  [key: string]: unknown;
+}
+
+type PackageListRequest = {
+  locationCode?: string;
+  type?: string;
+  slug?: string;
+  packageCode?: string;
+  iccid?: string;
+};
+
 export interface NormalizedPlan {
   slug: string;
   packageCode: string;
@@ -63,44 +80,65 @@ function parseDataGb(plan: Record<string, unknown>): number {
   );
 }
 
-function normalizePlans(rawPlans: unknown[]): NormalizedPlan[] {
+function normalizePlans(rawPlans: unknown[], defaultCurrency: string): NormalizedPlan[] {
   return rawPlans
     .map((plan) => (typeof plan === "object" && plan !== null ? plan : {}))
     .map((plan) => {
       const record = plan as Record<string, unknown>;
       const dataGb = Number(parseDataGb(record)) || 0;
-      const priceCents = Number(
-        record.wholesalePriceCents ?? record.priceCents ?? record.price1e2 ?? 0,
+      const priceCents = getPriceInCents(record);
+      const periodDays = Number(
+        record.periodNum ?? record.validDays ?? record.days ?? record.unusedValidTime ?? 30,
       );
-      const periodDays = Number(record.periodNum ?? record.validDays ?? record.days ?? 30);
-      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "plan").toString();
-      const packageCode = (record.packageCode ?? record.code ?? slug).toString();
+      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "").toString();
+      const packageCode = (record.packageCode ?? record.code ?? "").toString();
+      const currency = (record.currency ?? record.currencyCode ?? defaultCurrency).toString().toUpperCase();
 
       return {
-        slug,
+        slug: slug || packageCode,
         packageCode,
         dataGb,
         priceCents,
         periodDays,
-        currency: (record.currency ?? DEFAULT_CURRENCY).toString(),
+        currency,
       } satisfies NormalizedPlan;
     })
-    .filter((plan) => plan.dataGb > 0 && plan.priceCents > 0)
+    .filter((plan) => plan.packageCode && plan.dataGb > 0 && plan.priceCents > 0)
     .sort((a, b) => a.dataGb - b.dataGb);
 }
 
-export async function listPlansByLocation(locationCode: string) {
-  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
-    return {
-      countryCode: locationCode,
-      plans: fallbackPlans(locationCode),
-      markupPct: DEFAULT_MARKUP,
-      markup_pct: DEFAULT_MARKUP,
-      currency: DEFAULT_CURRENCY,
-    };
+function parsePrice(value: unknown) {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const cleaned = value.replace(/[^0-9.]/g, "");
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function getPriceInCents(record: Record<string, unknown>) {
+  const priceCandidates: Array<[string, "cents" | "units"]> = [
+    ["wholesalePriceCents", "cents"],
+    ["priceCents", "cents"],
+    ["price1e2", "cents"],
+    ["price", "units"],
+    ["salesPrice", "units"],
+    ["wholesalePrice", "units"],
+  ];
+
+  for (const [field, mode] of priceCandidates) {
+    const value = record[field];
+    const parsed = parsePrice(value);
+    if (parsed > 0) {
+      return mode === "cents" ? Math.round(parsed) : Math.round(parsed * 100);
+    }
   }
 
-  const body = { locationCode, type: "BASE", slug: "", packageCode: "" };
+  return 0;
+}
+
+async function fetchPackageList(body: PackageListRequest) {
   const response = await fetch(`${ESIM_BASE_URL}/api/v1/open/package/list`, {
     method: "POST",
     headers: buildSignatureHeaders(body),
@@ -109,64 +147,74 @@ export async function listPlansByLocation(locationCode: string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch plans for ${locationCode}`);
+    throw new Error(`Failed to fetch catalog (${response.status})`);
   }
 
-  const json = await response.json();
-  const rawPlans = Array.isArray(json?.obj?.packageList) ? (json.obj.packageList as unknown[]) : [];
-  const plans = normalizePlans(rawPlans);
+  const json = (await response.json()) as EsimAccessResponse;
+  const isSuccess = json.success === true || json.success === "true" || json.success === 1;
+
+  if (!isSuccess) {
+    const message =
+      typeof json.errorMessage === "string" && json.errorMessage.trim()
+        ? json.errorMessage
+        : "eSIM Access returned an error";
+    throw new Error(message);
+  }
+
+  const list = json.obj?.packageList;
+  if (!Array.isArray(list)) {
+    throw new Error("eSIM Access response did not include packageList");
+  }
+
+  return list as unknown[];
+}
+
+export async function listPlansByLocation(locationCode: string) {
+  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
+    throw new Error("Missing eSIM Access credentials");
+  }
+
+  const trimmed = locationCode.trim().toUpperCase();
+  if (!trimmed) {
+    throw new Error("Invalid location code");
+  }
+
+  const rawPlans = await fetchPackageList({ locationCode: trimmed, type: "BASE" });
+  const plans = normalizePlans(rawPlans, DEFAULT_CURRENCY);
+
+  if (plans.length === 0) {
+    throw new Error(`No plans returned for ${trimmed}`);
+  }
+
+  const catalogCurrency = plans.find((plan) => plan.currency)?.currency ?? DEFAULT_CURRENCY;
 
   return {
-    countryCode: locationCode,
-    plans: plans.length > 0 ? plans : fallbackPlans(locationCode),
+    countryCode: trimmed,
+    plans,
     markupPct: DEFAULT_MARKUP,
     markup_pct: DEFAULT_MARKUP,
-    currency: DEFAULT_CURRENCY,
+    currency: catalogCurrency,
   };
 }
 
 export async function listAllCountries() {
   if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
-    return fallbackCountries();
+    throw new Error("Missing eSIM Access credentials");
   }
 
-  const body = { locationCode: "", type: "BASE", slug: "", packageCode: "" };
-  const response = await fetch(`${ESIM_BASE_URL}/api/v1/open/package/list`, {
-    method: "POST",
-    headers: buildSignatureHeaders(body),
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch countries");
-  }
-
-  const json = await response.json();
-  const rawList: unknown[] = Array.isArray(json?.obj?.packageList) ? json.obj.packageList : [];
+  const rawList = await fetchPackageList({ type: "BASE" });
   const codes = Array.from(
     new Set(
       rawList
-        .map((entry) =>
-          typeof entry === "object" && entry !== null && "locationCode" in entry
-            ? String((entry as { locationCode?: unknown }).locationCode ?? "")
-            : "",
-        )
-        .filter((code): code is string => typeof code === "string" && code.length === 2),
+        .map((entry) => {
+          if (typeof entry !== "object" || entry === null || !("locationCode" in entry)) {
+            return "";
+          }
+          const code = String((entry as { locationCode?: unknown }).locationCode ?? "");
+          return code.trim().toUpperCase();
+        })
+        .filter((code): code is string => /^[A-Z]{2}$/.test(code)),
     ),
   );
   return codes.sort();
-}
-
-function fallbackCountries(): string[] {
-  return ["US", "MX", "GB", "ES", "JP", "TH", "BR", "AU", "FR", "IT"];
-}
-
-function fallbackPlans(countryCode: string): NormalizedPlan[] {
-  return [
-    { slug: `${countryCode.toLowerCase()}-5gb`, packageCode: `${countryCode}-5`, dataGb: 5, priceCents: 750, periodDays: 7, currency: DEFAULT_CURRENCY },
-    { slug: `${countryCode.toLowerCase()}-10gb`, packageCode: `${countryCode}-10`, dataGb: 10, priceCents: 1150, periodDays: 15, currency: DEFAULT_CURRENCY },
-    { slug: `${countryCode.toLowerCase()}-20gb`, packageCode: `${countryCode}-20`, dataGb: 20, priceCents: 1850, periodDays: 30, currency: DEFAULT_CURRENCY },
-    { slug: `${countryCode.toLowerCase()}-50gb`, packageCode: `${countryCode}-50`, dataGb: 50, priceCents: 3250, periodDays: 45, currency: DEFAULT_CURRENCY },
-  ];
 }
