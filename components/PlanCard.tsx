@@ -139,24 +139,17 @@ export default function PlanCard() {
   const buttonDisabled = !activePlan || isLoadingPlans;
 
   return (
-    <div className="flex flex-col gap-7 rounded-[32px] border border-white/40 bg-white/90 p-7 text-coal shadow-[0_35px_80px_rgba(9,41,39,0.35)] backdrop-blur lg:p-9">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-bold uppercase tracking-[0.4em] text-coal/50">Destination</p>
-          <h2 className="text-3xl font-extrabold leading-tight lg:text-4xl">Pick where you&apos;re heading</h2>
-        </div>
-        <span className="hidden text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-coal/40 sm:inline">
-          Powered by eSIM Access
-        </span>
+    <div className="flex flex-col gap-6 rounded-3xl border border-bottle/10 bg-white p-7 text-bottle shadow-card lg:p-8">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Plan builder</p>
+        <h2 className="text-2xl font-semibold leading-snug lg:text-3xl">Pick where you&apos;re headed and we&apos;ll prep the data</h2>
       </div>
 
-      <div className="flex gap-2 rounded-full bg-coal/5 p-1 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-coal/50">
+      <div className="flex gap-2 rounded-2xl bg-bottle/5 p-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-bottle/60">
         <button
           type="button"
-          className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "unlimited"
-              ? "bg-coal text-white shadow-[0_16px_40px_rgba(6,8,8,0.25)]"
-              : "hover:text-coal"
+          className={`flex-1 rounded-2xl px-4 py-2 transition ${
+            mode === "unlimited" ? "bg-bottle text-white shadow-sm" : "hover:text-bottle"
           }`}
           onClick={() => setMode("unlimited")}
         >
@@ -164,8 +157,8 @@ export default function PlanCard() {
         </button>
         <button
           type="button"
-          className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "metered" ? "bg-coal text-white" : "opacity-40"
+          className={`flex-1 rounded-2xl px-4 py-2 transition ${
+            mode === "metered" ? "bg-bottle text-white" : "opacity-40"
           }`}
           onClick={() => setMode("metered")}
           disabled
@@ -180,7 +173,7 @@ export default function PlanCard() {
         {featureBadges.map((badge) => (
           <div
             key={badge}
-            className="rounded-2xl border border-coal/10 bg-coal/5 px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-coal"
+            className="rounded-2xl border border-bottle/10 bg-bottle/5 px-4 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-bottle"
           >
             {badge}
           </div>
@@ -190,11 +183,11 @@ export default function PlanCard() {
       <div>
         {isLoadingPlans ? (
           <div className="space-y-4">
-            <div className="h-5 animate-pulse rounded-lg bg-coal/10" />
-            <div className="h-24 animate-pulse rounded-2xl bg-coal/10" />
+            <div className="h-5 animate-pulse rounded-lg bg-bottle/10" />
+            <div className="h-24 animate-pulse rounded-2xl bg-bottle/10" />
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-persian/30 bg-persian/5 p-4 text-sm font-semibold text-persian">{error}</div>
+          <div className="rounded-2xl border border-persian/30 bg-persian/5 p-4 text-sm font-medium text-persian">{error}</div>
         ) : plans.length > 0 ? (
           <PlanSlider
             plans={plans}
@@ -214,12 +207,12 @@ export default function PlanCard() {
         type="button"
         onClick={handleContinue}
         disabled={buttonDisabled}
-        className="w-full rounded-full bg-coal px-6 py-4 text-sm font-bold uppercase tracking-[0.4em] text-white shadow-[0_18px_55px_rgba(6,8,8,0.35)] transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded-2xl bg-bottle px-6 py-4 text-sm font-semibold uppercase tracking-[0.32em] text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {activePlan ? `Continue — ${formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency)}` : "Pick a destination"}
       </button>
 
-      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-coal/40">
+      <p className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-bottle/40">
         Taxes included. Secure checkout via Stripe.
       </p>
     </div>
