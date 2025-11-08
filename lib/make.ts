@@ -8,6 +8,12 @@ export interface MakeOrderPayload {
   customer_name?: string | null;
   order_id?: string | null;
   draft?: Record<string, unknown>;
+  plan_sku?: string;
+  plan_slug?: string;
+  data_gb?: number;
+  period_days?: number;
+  country_code?: string;
+  country_name?: string | null;
 }
 
 export async function dispatchMakeOrder(payload: MakeOrderPayload) {

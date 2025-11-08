@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripeClient } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { listPlansByLocation } from "@/lib/esim";
 
@@ -67,10 +67,6 @@ export async function POST(request: NextRequest) {
       : null;
     let knownUserId = existingProfile?.id ?? null;
 
-    if (!knownUserId && supabaseAdmin) {
-      const { data: userLookup } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-      knownUserId = userLookup?.user?.id ?? null;
-    }
     const authHeader = request.headers.get("authorization");
     let authenticatedUserId: string | null = null;
 
@@ -122,6 +118,8 @@ export async function POST(request: NextRequest) {
     const metadataDraft = {
       ...sanitizedDraft,
     } satisfies CheckoutDraft;
+
+    const stripe = getStripeClient();
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: sanitizedDraft.totalCents,

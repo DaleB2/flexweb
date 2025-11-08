@@ -1,154 +1,131 @@
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import type Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
-import { dispatchMakeOrder } from "@/lib/make";
+import Stripe from "stripe";
 
-export const dynamic = "force-dynamic";
+import { dispatchMakeOrder } from "@/lib/make";
+import { getStripeClient } from "@/lib/stripe";
+
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+
+function parseDraft(rawDraft?: string | null) {
+  if (!rawDraft) return undefined;
+  try {
+    return JSON.parse(rawDraft) as Record<string, unknown>;
+  } catch (error) {
+    console.warn("Unable to parse draft metadata", error);
+    return undefined;
+  }
+}
+
+function normalizeNumber(value: unknown) {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
 
 export async function POST(request: NextRequest) {
-  const rawBody = await request.text();
-  const signature = headers().get("stripe-signature");
-
-  if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 400 });
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured");
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
+
+  const signature = request.headers.get("stripe-signature");
+  const rawBody = await request.text();
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
+    if (!signature) {
+      throw new Error("Missing Stripe signature header");
+    }
+    const stripe = getStripeClient();
+    event = await stripe.webhooks.constructEventAsync(rawBody, signature, webhookSecret);
   } catch (error) {
-    console.error("Stripe signature verification failed", error);
+    console.error("Stripe webhook signature verification failed", error);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
-    const email = paymentIntent.receipt_email ?? (paymentIntent.metadata?.email ?? "").toString();
-    let draft: Record<string, unknown> = {};
+  try {
+    if (event.type === "payment_intent.succeeded") {
+      const stripe = getStripeClient();
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const metadataEntries = Object.entries(paymentIntent.metadata ?? {});
+      const metadata: Record<string, string> = Object.fromEntries(
+        metadataEntries.map(([key, value]) => [key, value ?? ""]),
+      );
 
-    try {
-      draft = paymentIntent.metadata?.draft ? JSON.parse(paymentIntent.metadata.draft) : {};
-    } catch (error) {
-      console.warn("Unable to parse draft metadata", error);
-    }
+      const alreadyNotified = metadata.make_notified === "1";
+      const draft = parseDraft(metadata.draft);
 
-    const supabaseAdmin = getSupabaseAdmin();
-    const makeAlreadyNotified = paymentIntent.metadata?.make_notified === "1";
-    let userId: string | null = null;
-    let orderId: string | null = null;
+      const charges = (
+        (paymentIntent as Stripe.PaymentIntent & { charges?: Stripe.ApiList<Stripe.Charge> }).charges?.data ?? []
+      ) as Stripe.Charge[];
+      const firstCharge = charges[0];
+      const billingDetails = firstCharge?.billing_details;
 
-    if (supabaseAdmin && email) {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
+      const email = (metadata.email ?? paymentIntent.receipt_email ?? billingDetails?.email ?? "").trim();
+      const customerName = metadata.customer_name ?? paymentIntent.shipping?.name ?? billingDetails?.name ?? null;
+      const amount = paymentIntent.amount_received ?? paymentIntent.amount ?? 0;
+      const currency = paymentIntent.currency?.toUpperCase() ?? metadata.currency?.toUpperCase() ?? "USD";
 
-      userId = profile?.id ?? null;
+      const planSku = metadata.package_code ?? (typeof draft?.packageCode === "string" ? draft.packageCode : undefined);
+      const planSlug = metadata.slug ?? (typeof draft?.slug === "string" ? draft.slug : undefined);
+      const dataGb = normalizeNumber(draft?.dataGb);
+      const periodDays = normalizeNumber(draft?.periodDays);
+      const countryCode = metadata.country_code ?? (typeof draft?.countryCode === "string" ? draft.countryCode : undefined);
+      const countryName =
+        typeof draft?.country === "string"
+          ? draft.country
+          : metadata.country ?? metadata.country_name ?? null;
 
-      if (!userId) {
-        const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-        const user = existingUser?.user;
-
-        if (user) {
-          userId = user.id;
-        } else {
-          const { data: created } = await supabaseAdmin.auth.admin.createUser({
-            email,
-            email_confirm: true,
-          });
-          userId = created?.user?.id ?? null;
-        }
-
-        if (userId) {
-          await supabaseAdmin.from("profiles").upsert({ id: userId, email }, { onConflict: "id" });
-        }
-      }
-
-      if (userId) {
-        const { data: existingOrder } = await supabaseAdmin
-          .from("orders")
-          .select("id")
-          .eq("stripe_pi_id", paymentIntent.id)
-          .maybeSingle();
-
-        orderId = existingOrder?.id ?? null;
-
-        if (!orderId) {
-          const { data: inserted, error: insertError } = await supabaseAdmin
-            .from("orders")
-            .insert({
-              user_id: userId,
-              status: "paid",
-              country_code: draft.countryCode ?? draft.country_code ?? null,
-              package_code: draft.packageCode ?? draft.package_code ?? null,
-              slug: draft.slug ?? null,
-              data_gb: draft.dataGb ?? draft.data_gb ?? null,
-              period_days: draft.periodDays ?? draft.period_days ?? null,
-              wholesale_cents: draft.wholesaleCents ?? draft.wholesale_cents ?? 0,
-              markup_pct: draft.markupPct ?? draft.markup_pct ?? Number(process.env.DEFAULT_MARKUP_PCT ?? 35),
-              total_cents: draft.totalCents ?? draft.total_cents ?? paymentIntent.amount,
-              currency: draft.currency ?? paymentIntent.currency ?? "USD",
-              stripe_pi_id: paymentIntent.id,
-            })
-            .select("id")
-            .single();
-
-          if (insertError) {
-            console.error("Failed to persist order", insertError);
-          }
-
-          orderId = inserted?.id ?? orderId;
-        }
-      }
-    } else {
-      console.info("Skipping Supabase persistence; admin client not configured.");
-    }
-
-    console.info("Payment succeeded for", email, "draft:", draft);
-
-    if (!makeAlreadyNotified) {
-      try {
+      if (!alreadyNotified) {
         await dispatchMakeOrder({
           payment_intent_id: paymentIntent.id,
           email,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency ?? "usd",
-          customer_name: paymentIntent.shipping?.name ?? paymentIntent.metadata?.customer_name ?? null,
-          order_id: orderId,
+          amount,
+          currency,
+          customer_name: customerName,
+          order_id: metadata.order_id ?? null,
           draft,
+          plan_sku: planSku,
+          plan_slug: planSlug,
+          data_gb: dataGb,
+          period_days: periodDays,
+          country_code: countryCode,
+          country_name: countryName ?? null,
         });
-
-        const metadataUpdate = Object.entries(paymentIntent.metadata ?? {}).reduce<Record<string, string>>(
-          (acc, [key, value]) => {
-            if (value !== null && value !== undefined && key !== "make_notified") {
-              acc[key] = String(value);
-            }
-            return acc;
-          },
-          {},
-        );
-
-        metadataUpdate.make_notified = "1";
 
         await stripe.paymentIntents.update(paymentIntent.id, {
-          metadata: metadataUpdate,
+          metadata: {
+            ...metadata,
+            make_notified: "1",
+          },
         });
-
-        if (supabaseAdmin && orderId) {
-          await supabaseAdmin
-            .from("orders")
-            .update({ status: "processing" })
-            .eq("id", orderId);
-        }
-      } catch (error) {
-        console.error("Failed to notify Make webhook", error);
+      }
+    } else if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.payment_intent) {
+        // In case Checkout is ever used, retrieve the PaymentIntent to ensure Make receives the payload.
+        const stripe = getStripeClient();
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id,
+        );
+        await stripe.paymentIntents.update(paymentIntent.id, {
+          metadata: {
+            ...(paymentIntent.metadata ?? {}),
+            session_completed: "1",
+          },
+        });
       }
     }
+  } catch (error) {
+    console.error("Stripe webhook processing failed", error);
+    return NextResponse.json({ error: "Webhook handling failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

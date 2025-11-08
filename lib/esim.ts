@@ -144,7 +144,17 @@ export async function listAllCountries() {
 
   const json = await response.json();
   const rawList: unknown[] = Array.isArray(json?.obj?.packageList) ? json.obj.packageList : [];
-  const codes = Array.from(new Set(rawList.map((entry) => entry.locationCode).filter(Boolean)));
+  const codes = Array.from(
+    new Set(
+      rawList
+        .map((entry) =>
+          typeof entry === "object" && entry !== null && "locationCode" in entry
+            ? String((entry as { locationCode?: unknown }).locationCode ?? "")
+            : "",
+        )
+        .filter((code): code is string => typeof code === "string" && code.length === 2),
+    ),
+  );
   return codes.sort();
 }
 

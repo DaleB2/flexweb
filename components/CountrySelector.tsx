@@ -7,14 +7,15 @@ export type CountryOption = {
   name: string;
 };
 
-const regionNames = typeof Intl !== "undefined"
-  ? new Intl.DisplayNames(["en"], { type: "region" })
-  : undefined;
+const regionNames = typeof Intl !== "undefined" ? new Intl.DisplayNames(["en"], { type: "region" }) : undefined;
 
 function getCountryName(code: string) {
   if (!code) return code;
   const normalized = code.trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(normalized)) return normalized || code;
+  if (!/^[A-Z]{2}$/.test(normalized)) {
+    return normalized || code;
+  }
+
   try {
     return regionNames?.of(normalized) ?? normalized;
   } catch (error) {
@@ -23,7 +24,6 @@ function getCountryName(code: string) {
     }
     return normalized;
   }
-  return regionNames?.of(code) ?? code;
 }
 
 function countryToFlag(code: string) {
@@ -48,13 +48,10 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
         return {
           code: normalized,
           name: getCountryName(normalized),
-        };
+        } satisfies CountryOption;
       })
-      .filter((option) => option.code.length === 2);
-    return countries.map((code) => ({
-      code,
-      name: getCountryName(code),
-    }));
+      .filter((option) => option.code.length === 2)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [countries]);
 
   const filtered = useMemo(() => {
@@ -68,7 +65,10 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
   return (
     <div className="space-y-4">
       <div className="rounded-2xl bg-white/90 p-4 shadow-inner shadow-white/40 backdrop-blur">
-        <label htmlFor="country-search" className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-bottle/70">
+        <label
+          htmlFor="country-search"
+          className="mb-2 block text-xs font-semibold uppercase tracking-[0.35em] text-bottle/70"
+        >
           Search destination
         </label>
         <input
@@ -84,7 +84,7 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
       <div className="max-h-64 overflow-y-auto rounded-2xl border border-white/40 bg-white/70 p-2 backdrop-blur">
         <ul className="space-y-1">
           {filtered.map((option) => {
-            const active = option.code === selected;
+            const active = option.code === selected?.toUpperCase();
             return (
               <li key={option.code}>
                 <button
