@@ -13,6 +13,16 @@ const regionNames = typeof Intl !== "undefined"
 
 function getCountryName(code: string) {
   if (!code) return code;
+  const normalized = code.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return normalized || code;
+  try {
+    return regionNames?.of(normalized) ?? normalized;
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Unsupported country code", normalized, error);
+    }
+    return normalized;
+  }
   return regionNames?.of(code) ?? code;
 }
 
@@ -32,6 +42,15 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
   const [query, setQuery] = useState("");
 
   const options = useMemo<CountryOption[]>(() => {
+    return countries
+      .map((code) => {
+        const normalized = code.trim().toUpperCase();
+        return {
+          code: normalized,
+          name: getCountryName(normalized),
+        };
+      })
+      .filter((option) => option.code.length === 2);
     return countries.map((code) => ({
       code,
       name: getCountryName(code),
