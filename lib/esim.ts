@@ -73,31 +73,26 @@ function normalizePlans(rawPlans: unknown[]): NormalizedPlan[] {
         record.wholesalePriceCents ?? record.priceCents ?? record.price1e2 ?? 0,
       );
       const periodDays = Number(record.periodNum ?? record.validDays ?? record.days ?? 30);
-      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "plan").toString();
-      const packageCode = (record.packageCode ?? record.code ?? slug).toString();
+      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "").toString();
+      const packageCode = (record.packageCode ?? record.code ?? "").toString();
+      const currency = (record.currency ?? DEFAULT_CURRENCY).toString();
 
       return {
-        slug,
+        slug: slug || packageCode,
         packageCode,
         dataGb,
         priceCents,
         periodDays,
-        currency: (record.currency ?? DEFAULT_CURRENCY).toString(),
+        currency,
       } satisfies NormalizedPlan;
     })
-    .filter((plan) => plan.dataGb > 0 && plan.priceCents > 0)
+    .filter((plan) => plan.packageCode && plan.dataGb > 0 && plan.priceCents > 0)
     .sort((a, b) => a.dataGb - b.dataGb);
 }
 
 export async function listPlansByLocation(locationCode: string) {
   if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
-    return {
-      countryCode: locationCode,
-      plans: fallbackPlans(locationCode),
-      markupPct: DEFAULT_MARKUP,
-      markup_pct: DEFAULT_MARKUP,
-      currency: DEFAULT_CURRENCY,
-    };
+    throw new Error("Missing eSIM Access credentials");
   }
 
   const body = { locationCode, type: "BASE", slug: "", packageCode: "" };
@@ -116,9 +111,13 @@ export async function listPlansByLocation(locationCode: string) {
   const rawPlans = Array.isArray(json?.obj?.packageList) ? (json.obj.packageList as unknown[]) : [];
   const plans = normalizePlans(rawPlans);
 
+  if (plans.length === 0) {
+    throw new Error(`No plans returned for ${locationCode}`);
+  }
+
   return {
     countryCode: locationCode,
-    plans: plans.length > 0 ? plans : fallbackPlans(locationCode),
+    plans,
     markupPct: DEFAULT_MARKUP,
     markup_pct: DEFAULT_MARKUP,
     currency: DEFAULT_CURRENCY,
@@ -127,7 +126,7 @@ export async function listPlansByLocation(locationCode: string) {
 
 export async function listAllCountries() {
   if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
-    return fallbackCountries();
+    throw new Error("Missing eSIM Access credentials");
   }
 
   const body = { locationCode: "", type: "BASE", slug: "", packageCode: "" };
@@ -156,17 +155,4 @@ export async function listAllCountries() {
     ),
   );
   return codes.sort();
-}
-
-function fallbackCountries(): string[] {
-  return ["US", "MX", "GB", "ES", "JP", "TH", "BR", "AU", "FR", "IT"];
-}
-
-function fallbackPlans(countryCode: string): NormalizedPlan[] {
-  return [
-    { slug: `${countryCode.toLowerCase()}-5gb`, packageCode: `${countryCode}-5`, dataGb: 5, priceCents: 750, periodDays: 7, currency: DEFAULT_CURRENCY },
-    { slug: `${countryCode.toLowerCase()}-10gb`, packageCode: `${countryCode}-10`, dataGb: 10, priceCents: 1150, periodDays: 15, currency: DEFAULT_CURRENCY },
-    { slug: `${countryCode.toLowerCase()}-20gb`, packageCode: `${countryCode}-20`, dataGb: 20, priceCents: 1850, periodDays: 30, currency: DEFAULT_CURRENCY },
-    { slug: `${countryCode.toLowerCase()}-50gb`, packageCode: `${countryCode}-50`, dataGb: 50, priceCents: 3250, periodDays: 45, currency: DEFAULT_CURRENCY },
-  ];
 }

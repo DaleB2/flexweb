@@ -13,6 +13,7 @@ interface CatalogResponse {
   markup_pct?: number;
   markupPct?: number;
   currency?: string;
+  error?: string;
 }
 
 const featureBadges = [
@@ -41,9 +42,21 @@ export default function PlanCard() {
       try {
         const response = await fetch("/api/catalog", { cache: "no-store" });
         const json: CatalogResponse = await response.json();
+        if (!response.ok) {
+          throw new Error(json.error ?? "Failed to load countries");
+        }
         if (cancelled) return;
 
-        setCountries(json.countries ?? []);
+        if (!Array.isArray(json.countries) || json.countries.length === 0) {
+          throw new Error("No countries available");
+        }
+
+        setCountries(json.countries);
+        setError(null);
+        setCountryCode((current) => {
+          if (!current) return null;
+          return json.countries.includes(current) ? current : null;
+        });
         const markupFromResponse = json.markup_pct ?? json.markupPct;
         if (typeof markupFromResponse === "number") {
           setMarkupPct(markupFromResponse);
@@ -54,7 +67,11 @@ export default function PlanCard() {
       } catch (err) {
         console.error("Failed to load countries", err);
         if (!cancelled) {
-          setCountries(["US", "GB", "JP", "AU"]);
+          setCountries([]);
+          setCountryCode(null);
+          setPlans([]);
+          setSelectedIndex(0);
+          setError("We couldn’t load countries right now. Please refresh and try again.");
         }
       }
     };
@@ -77,9 +94,16 @@ export default function PlanCard() {
       try {
         const response = await fetch(`/api/catalog?countryCode=${countryCode}`, { cache: "no-store" });
         const json: CatalogResponse = await response.json();
+        if (!response.ok) {
+          throw new Error(json.error ?? "Failed to load plans");
+        }
         if (aborted) return;
 
-        setPlans(json.plans ?? []);
+        if (!Array.isArray(json.plans) || json.plans.length === 0) {
+          throw new Error("No plans available for this country yet. Check back soon.");
+        }
+
+        setPlans(json.plans);
         setSelectedIndex(0);
         const markupFromResponse = json.markup_pct ?? json.markupPct;
         if (typeof markupFromResponse === "number") {
@@ -91,7 +115,11 @@ export default function PlanCard() {
       } catch (err) {
         console.error("Failed to load plans", err);
         if (!aborted) {
-          setError("We couldn’t load plans for this country. Try another destination.");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "We couldn’t load plans for this country. Try another destination.",
+          );
         }
       } finally {
         if (!aborted) {
