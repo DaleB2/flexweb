@@ -1,47 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listAllCountries, listPlansByLocation } from "@/lib/esim";
 
-export async function GET(req: NextRequest) {
-  const countryCode = req.nextUrl.searchParams.get("countryCode");
+export const dynamic = "force-dynamic";
 
-  // No country → return countries list
+export async function GET(request: NextRequest) {
+  const countryCode = request.nextUrl.searchParams.get("countryCode");
+
   if (!countryCode) {
     try {
       const countries = await listAllCountries();
       return NextResponse.json({
         countries,
-        markup_pct: Number(process.env.DEFAULT_MARKUP_PCT || 20),
+        markup_pct: Number(process.env.DEFAULT_MARKUP_PCT ?? 35),
+        currency: process.env.DEFAULT_CURRENCY ?? "USD",
       });
-    } catch {
-      // safe fallback
+    } catch (error) {
+      console.error("Failed to fetch countries", error);
       return NextResponse.json({
-        countries: ["United States", "Australia", "United Kingdom", "Japan"],
-        markup_pct: Number(process.env.DEFAULT_MARKUP_PCT || 20),
+        countries: ["US", "MX", "GB", "ES", "JP"],
+        markup_pct: Number(process.env.DEFAULT_MARKUP_PCT ?? 35),
+        currency: process.env.DEFAULT_CURRENCY ?? "USD",
       });
     }
   }
 
-  // With country → return normalized plans
   try {
-    const { plans } = await listPlansByLocation(countryCode);
-    return NextResponse.json({
-      countryCode,
-      plans,
-      markup_pct: Number(process.env.DEFAULT_MARKUP_PCT || 20),
-      currency: process.env.DEFAULT_CURRENCY || "USD",
-    });
-  } catch {
-    // nice fallback demo plans (NEVER empty UI)
+    const catalog = await listPlansByLocation(countryCode);
+    return NextResponse.json(catalog);
+  } catch (error) {
+    console.error(`Falling back to demo plans for ${countryCode}`, error);
     return NextResponse.json({
       countryCode,
       plans: [
-        { slug: "demo-5gb", packageCode: "DEMO5", dataGb: 5, priceCents: 600, periodDays: 7, currency: "USD" },
-        { slug: "demo-10gb", packageCode: "DEMO10", dataGb: 10, priceCents: 1000, periodDays: 15, currency: "USD" },
-        { slug: "demo-20gb", packageCode: "DEMO20", dataGb: 20, priceCents: 1600, periodDays: 30, currency: "USD" },
-        { slug: "demo-50gb", packageCode: "DEMO50", dataGb: 50, priceCents: 2800, periodDays: 30, currency: "USD" },
+        { slug: `${countryCode}-demo-5`, packageCode: `${countryCode}-DEMO-5`, dataGb: 5, priceCents: 750, periodDays: 7, currency: process.env.DEFAULT_CURRENCY ?? "USD" },
+        { slug: `${countryCode}-demo-10`, packageCode: `${countryCode}-DEMO-10`, dataGb: 10, priceCents: 1150, periodDays: 15, currency: process.env.DEFAULT_CURRENCY ?? "USD" },
+        { slug: `${countryCode}-demo-20`, packageCode: `${countryCode}-DEMO-20`, dataGb: 20, priceCents: 1850, periodDays: 30, currency: process.env.DEFAULT_CURRENCY ?? "USD" },
+        { slug: `${countryCode}-demo-50`, packageCode: `${countryCode}-DEMO-50`, dataGb: 50, priceCents: 3250, periodDays: 45, currency: process.env.DEFAULT_CURRENCY ?? "USD" },
       ],
-      markup_pct: Number(process.env.DEFAULT_MARKUP_PCT || 20),
-      currency: process.env.DEFAULT_CURRENCY || "USD",
+      markupPct: Number(process.env.DEFAULT_MARKUP_PCT ?? 35),
+      markup_pct: Number(process.env.DEFAULT_MARKUP_PCT ?? 35),
+      currency: process.env.DEFAULT_CURRENCY ?? "USD",
     });
   }
 }
