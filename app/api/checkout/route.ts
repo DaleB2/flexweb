@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const existingProfile = supabaseAdmin
       ? (await supabaseAdmin.from("profiles").select("id").eq("email", email).maybeSingle())?.data ?? null
       : null;
-    let knownUserId = existingProfile?.id ?? null;
+    const knownUserId = existingProfile?.id ?? null;
 
     const authHeader = request.headers.get("authorization");
     let authenticatedUserId: string | null = null;
