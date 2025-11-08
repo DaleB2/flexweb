@@ -8,7 +8,7 @@
 }
 
 body {
-  @apply bg-nurse text-coal font-helv antialiased;
+  @apply bg-coal text-white font-display antialiased;
 }
 
 a {
