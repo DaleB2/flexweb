@@ -1,106 +1,158 @@
 import crypto from "crypto";
 
-const BASE = "https://api.esimaccess.com";
-const ACCESS = process.env.ESIM_ACCESS_CODE!;
-const SECRET = process.env.ESIM_SECRET!;
-const CURRENCY = process.env.DEFAULT_CURRENCY || "USD";
+const ESIM_BASE_URL = process.env.ESIM_ACCESS_BASE_URL ?? "https://api.esimaccess.com";
+const ESIM_ACCESS_CODE = process.env.ESIM_ACCESS_CODE ?? "";
+const ESIM_SECRET = process.env.ESIM_SECRET ?? "";
+const DEFAULT_CURRENCY = process.env.DEFAULT_CURRENCY ?? "USD";
+const DEFAULT_MARKUP = Number(process.env.DEFAULT_MARKUP_PCT ?? 35);
 
-function sign(body: any) {
-  const ts = Date.now().toString();
-  const rid = crypto.randomUUID();
-  const raw = JSON.stringify(body ?? {});
-  const sigStr = ts + rid + ACCESS + raw;
-  const sig = crypto.createHmac("sha256", SECRET).update(sigStr).digest("hex").toLowerCase();
-  return {
-    "RT-AccessCode": ACCESS,
-    "RT-Timestamp": ts,
-    "RT-RequestID": rid,
-    "RT-Signature": sig,
-    "Content-Type": "application/json",
-  };
+export interface NormalizedPlan {
+  slug: string;
+  packageCode: string;
+  dataGb: number;
+  priceCents: number;
+  periodDays: number;
+  currency: string;
 }
 
-/** Attempt to parse data allowance (GB) from different potential fields */
-function getGb(p: any): number {
-  // common fields seen across eSIM vendors
-  if (typeof p.dataGb === "number") return p.dataGb;
-  if (typeof p.flowGb === "number") return p.flowGb;
-  if (typeof p.flow === "number") return p.flow / 1024;       // flow in MB
-  if (typeof p.traffic === "number") return p.traffic / 1024; // traffic in MB
-  if (typeof p.data === "number") return p.data / 1024;       // data in MB
+export function buildSignatureHeaders(body: unknown) {
+  const timestamp = Date.now().toString();
+  const requestId = crypto.randomUUID();
+  const serializedBody = JSON.stringify(body ?? {});
+  const payload = `${timestamp}${requestId}${ESIM_ACCESS_CODE}${serializedBody}`;
+  const signature = crypto
+    .createHmac("sha256", ESIM_SECRET)
+    .update(payload)
+    .digest("hex")
+    .toLowerCase();
 
-  const tryStr = (s?: string) => {
-    if (!s) return NaN;
-    const m = s.match(/(\d+(\.\d+)?)\s*([gG][bB])/);
-    return m ? parseFloat(m[1]) : NaN;
+  return {
+    "RT-AccessCode": ESIM_ACCESS_CODE,
+    "RT-Timestamp": timestamp,
+    "RT-RequestID": requestId,
+    "RT-Signature": signature,
+    "Content-Type": "application/json",
+  } satisfies HeadersInit;
+}
+
+function parseDataGb(plan: Record<string, unknown>): number {
+  const candidateFields = ["dataGb", "flowGb"] as const;
+  for (const field of candidateFields) {
+    const value = plan[field];
+    if (typeof value === "number") return value;
+  }
+
+  const mbFields = ["flow", "traffic", "data"] as const;
+  for (const field of mbFields) {
+    const value = plan[field];
+    if (typeof value === "number") return value / 1024;
+  }
+
+  const tryExtract = (value?: unknown) => {
+    if (typeof value !== "string") return NaN;
+    const match = value.match(/(\d+(?:\.\d+)?)\s*(?:gb|GB)/);
+    return match ? Number(match[1]) : NaN;
   };
 
   return (
-    tryStr(p.packageName) ||
-    tryStr(p.name) ||
-    tryStr(p.title) ||
-    tryStr(p.slug) ||
+    tryExtract(plan.packageName as string) ||
+    tryExtract(plan.name as string) ||
+    tryExtract(plan.title as string) ||
+    tryExtract(plan.slug as string) ||
     0
   );
 }
 
-/**
- * Returns normalized plans for a country or region.
- * Output:
- *  { countryCode, plans: [{slug, packageCode, dataGb, priceCents, periodDays}] }
- */
-export async function listPlansByLocation(locationCode: string) {
-  const body = { locationCode, type: "BASE", slug: "", packageCode: "" };
-  const r = await fetch(`${BASE}/api/v1/open/package/list`, {
-    method: "POST",
-    headers: sign(body),
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
+function normalizePlans(rawPlans: any[]): NormalizedPlan[] {
+  return rawPlans
+    .map((plan) => {
+      const dataGb = Number(parseDataGb(plan)) || 0;
+      const priceCents = Number(plan.wholesalePriceCents ?? plan.priceCents ?? plan.price1e2 ?? 0);
+      const periodDays = Number(plan.periodNum ?? plan.validDays ?? plan.days ?? 30);
+      const slug = (plan.slug ?? plan.packageName ?? plan.packageCode ?? "plan").toString();
+      const packageCode = (plan.packageCode ?? plan.code ?? slug).toString();
 
-  if (!r.ok) throw new Error(`eSIMAccess list failed ${r.status}`);
-
-  const json = await r.json();
-  const list = json?.obj?.packageList ?? [];
-
-  const plans = list.map((p: any) => {
-    const dataGb = Number(getGb(p)) || 0;
-    const priceCents =
-      Number(p.wholesalePriceCents ?? p.priceCents ?? p.price1e2 ?? 0);
-    const periodDays = Number(p.periodNum ?? p.validDays ?? 30);
-
-    return {
-      slug: p.slug ?? p.packageName ?? p.packageCode,
-      packageCode: p.packageCode ?? p.code,
-      dataGb,
-      priceCents,
-      periodDays,
-      currency: CURRENCY,
-    };
-  })
-  // only keep ones we can render (with a data amount and a price)
-  .filter((p: any) => p.dataGb > 0 && p.priceCents > 0);
-
-  // sort by GB asc
-  plans.sort((a: any, b: any) => a.dataGb - b.dataGb);
-
-  return { countryCode: locationCode, plans };
+      return {
+        slug,
+        packageCode,
+        dataGb,
+        priceCents,
+        periodDays,
+        currency: plan.currency ?? DEFAULT_CURRENCY,
+      } satisfies NormalizedPlan;
+    })
+    .filter((plan) => plan.dataGb > 0 && plan.priceCents > 0)
+    .sort((a, b) => a.dataGb - b.dataGb);
 }
 
-/** Countries helper (very simple): unique location codes from the API */
-export async function listAllCountries() {
-  // Ask for "ALL" then dedupe by locationCode
-  const body = { locationCode: "", type: "BASE", slug: "", packageCode: "" };
-  const r = await fetch(`${BASE}/api/v1/open/package/list`, {
+export async function listPlansByLocation(locationCode: string) {
+  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
+    return {
+      countryCode: locationCode,
+      plans: fallbackPlans(locationCode),
+      markupPct: DEFAULT_MARKUP,
+      markup_pct: DEFAULT_MARKUP,
+      currency: DEFAULT_CURRENCY,
+    };
+  }
+
+  const body = { locationCode, type: "BASE", slug: "", packageCode: "" };
+  const response = await fetch(`${ESIM_BASE_URL}/api/v1/open/package/list`, {
     method: "POST",
-    headers: sign(body),
+    headers: buildSignatureHeaders(body),
     body: JSON.stringify(body),
     cache: "no-store",
   });
-  if (!r.ok) throw new Error("countries fetch failed");
 
-  const json = await r.json();
-  const list = json?.obj?.packageList ?? [];
-  const codes = Array.from(new Set(list.map((p: any) => p.locationCode).filter(Boolean))).sort();
-  return codes;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch plans for ${locationCode}`);
+  }
+
+  const json = await response.json();
+  const rawPlans = json?.obj?.packageList ?? [];
+  const plans = normalizePlans(rawPlans);
+
+  return {
+    countryCode: locationCode,
+    plans: plans.length > 0 ? plans : fallbackPlans(locationCode),
+    markupPct: DEFAULT_MARKUP,
+    markup_pct: DEFAULT_MARKUP,
+    currency: DEFAULT_CURRENCY,
+  };
+}
+
+export async function listAllCountries() {
+  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
+    return fallbackCountries();
+  }
+
+  const body = { locationCode: "", type: "BASE", slug: "", packageCode: "" };
+  const response = await fetch(`${ESIM_BASE_URL}/api/v1/open/package/list`, {
+    method: "POST",
+    headers: buildSignatureHeaders(body),
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch countries");
+  }
+
+  const json = await response.json();
+  const rawList: any[] = json?.obj?.packageList ?? [];
+  const codes = Array.from(new Set(rawList.map((entry) => entry.locationCode).filter(Boolean)));
+  return codes.sort();
+}
+
+function fallbackCountries(): string[] {
+  return ["US", "MX", "GB", "ES", "JP", "TH", "BR", "AU", "FR", "IT"];
+}
+
+function fallbackPlans(countryCode: string): NormalizedPlan[] {
+  return [
+    { slug: `${countryCode.toLowerCase()}-5gb`, packageCode: `${countryCode}-5`, dataGb: 5, priceCents: 750, periodDays: 7, currency: DEFAULT_CURRENCY },
+    { slug: `${countryCode.toLowerCase()}-10gb`, packageCode: `${countryCode}-10`, dataGb: 10, priceCents: 1150, periodDays: 15, currency: DEFAULT_CURRENCY },
+    { slug: `${countryCode.toLowerCase()}-20gb`, packageCode: `${countryCode}-20`, dataGb: 20, priceCents: 1850, periodDays: 30, currency: DEFAULT_CURRENCY },
+    { slug: `${countryCode.toLowerCase()}-50gb`, packageCode: `${countryCode}-50`, dataGb: 50, priceCents: 3250, periodDays: 45, currency: DEFAULT_CURRENCY },
+  ];
 }
