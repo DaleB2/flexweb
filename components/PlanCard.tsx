@@ -16,12 +16,7 @@ interface CatalogResponse {
   error?: string;
 }
 
-const featureBadges = [
-  "Instant activation",
-  "Unlocked device ready",
-  "Keep WhatsApp active",
-  "Share hotspot",
-];
+const featureBadges = ["Instant QR", "Hotspot friendly", "Cheeky culture guide", "Local currency checkout"];
 
 export default function PlanCard() {
   const router = useRouter();
@@ -31,9 +26,8 @@ export default function PlanCard() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [markupPct, setMarkupPct] = useState<number>(Number(process.env.NEXT_PUBLIC_DEFAULT_MARKUP_PCT ?? 35));
+  const [markupPct, setMarkupPct] = useState<number>(Number(process.env.NEXT_PUBLIC_DEFAULT_MARKUP_PCT ?? 18));
   const [currency, setCurrency] = useState<string>(process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? "USD");
-  const [mode, setMode] = useState<"unlimited" | "metered">("unlimited");
 
   useEffect(() => {
     let cancelled = false;
@@ -173,45 +167,20 @@ export default function PlanCard() {
   const buttonDisabled = !activePlan || isLoadingPlans;
 
   return (
-    <div className="flex flex-col gap-7 rounded-[2rem] border border-white/10 bg-white/95 p-8 text-coal shadow-[0_40px_80px_rgba(5,12,32,0.28)] backdrop-blur">
-      <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-coal/50">Plan studio</p>
-        <h2 className="text-3xl font-semibold leading-snug">Build your Flex Mobile load-out</h2>
-        <p className="text-sm text-coal/60">
-          Lock transparent pricing before you fly and keep devices streaming the minute wheels touch down.
+    <div className="relative flex flex-col gap-8 overflow-hidden rounded-[2.25rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-card">
+      <div className="space-y-4">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.4em] text-slate-500">Plan studio</p>
+        <h2 className="text-3xl font-semibold leading-snug sm:text-[2.25rem]">Pick a country and grab unlimited data.</h2>
+        <p className="text-sm text-slate-600">
+          We keep things breezy: no plastic SIM swaps, no confusing bundles. Just choose your stop, checkout, and scan the QR when you land.
         </p>
       </div>
 
-      <div className="flex gap-2 rounded-2xl bg-coal/5 p-1 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-coal/60">
-        <button
-          type="button"
-          className={`flex-1 rounded-2xl px-4 py-2 transition ${
-            mode === "unlimited" ? "bg-coal text-white shadow-[0_12px_30px_rgba(6,8,8,0.25)]" : "hover:text-coal"
-          }`}
-          onClick={() => setMode("unlimited")}
-        >
-          Unlimited data
-        </button>
-        <button
-          type="button"
-          className={`flex-1 rounded-2xl px-4 py-2 transition ${
-            mode === "metered" ? "bg-coal text-white" : "opacity-40"
-          }`}
-          onClick={() => setMode("metered")}
-          disabled
-        >
-          Pay per GB
-        </button>
-      </div>
-
-      <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} />
+      <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} variant="light" />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {featureBadges.map((badge) => (
-          <div
-            key={badge}
-            className="rounded-2xl border border-coal/10 bg-coal/5 px-4 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-coal"
-          >
+          <div key={badge} className="rounded-2xl border border-slate-200 bg-nurse px-4 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-slate-600">
             {badge}
           </div>
         ))}
@@ -220,8 +189,8 @@ export default function PlanCard() {
       <div>
         {isLoadingPlans ? (
           <div className="space-y-4">
-            <div className="h-5 animate-pulse rounded-lg bg-coal/10" />
-            <div className="h-24 animate-pulse rounded-2xl bg-coal/10" />
+            <div className="h-5 animate-pulse rounded-lg bg-nurse" />
+            <div className="h-28 animate-pulse rounded-3xl bg-nurse" />
           </div>
         ) : error ? (
           <div className="rounded-2xl border border-persian/30 bg-persian/5 p-4 text-sm font-medium text-persian">{error}</div>
@@ -234,22 +203,45 @@ export default function PlanCard() {
             onChange={setSelectedIndex}
           />
         ) : (
-          <div className="rounded-2xl border border-coal/10 bg-coal/5 p-6 text-center text-sm font-semibold text-coal/70">
+          <div className="rounded-2xl border border-slate-200 bg-nurse p-6 text-center text-sm font-semibold text-slate-600">
             Select a destination to view plans.
           </div>
         )}
+      </div>
+
+      <div className="rounded-[1.75rem] border border-slate-200 bg-nurse p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.38em] text-slate-500">Checkout preview</span>
+          <span className="text-sm font-medium text-slate-500">Stripe secured</span>
+        </div>
+        <div className="mt-4 flex flex-col gap-2 text-sm text-slate-600">
+          <div className="flex items-center justify-between">
+            <span>Total due</span>
+            <span className="text-base font-semibold">
+              {activePlan
+                ? formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency)
+                : "—"}
+            </span>
+          </div>
+          <div className="text-xs text-slate-500">No surprise fees—taxes and activation included.</div>
+        </div>
       </div>
 
       <button
         type="button"
         onClick={handleContinue}
         disabled={buttonDisabled}
-        className="w-full rounded-2xl bg-coal px-6 py-4 text-sm font-semibold uppercase tracking-[0.32em] text-white transition hover:bg-coal/90 disabled:cursor-not-allowed disabled:opacity-40"
+        className="group relative w-full overflow-hidden rounded-[1.75rem] bg-coal px-6 py-4 text-sm font-semibold uppercase tracking-[0.32em] text-white transition hover:bg-coal/90 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {activePlan ? `Continue — ${formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency)}` : "Pick a destination"}
+        <span className="relative z-10">
+          {activePlan
+            ? `Continue — ${formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency)}`
+            : "Pick a destination"}
+        </span>
+        <span className="absolute inset-0 -z-10 scale-110 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.15),_transparent_70%)] opacity-0 transition group-hover:opacity-100" />
       </button>
 
-      <p className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-coal/40">
+      <p className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-slate-400">
         Taxes included. Secure checkout via Stripe.
       </p>
     </div>

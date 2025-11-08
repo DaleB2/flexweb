@@ -62,10 +62,31 @@ export async function POST(request: NextRequest) {
     const draft = parseDraft(body.draft ?? {});
 
     const supabaseAdmin = getSupabaseAdmin();
-    const existingProfile = supabaseAdmin
-      ? (await supabaseAdmin.from("profiles").select("id").eq("email", email).maybeSingle())?.data ?? null
-      : null;
-    const knownUserId = existingProfile?.id ?? null;
+    let knownUserId: string | null = null;
+
+    if (supabaseAdmin) {
+      try {
+        const { data: authMatch, error: authError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+        if (authError && authError.status !== 404) {
+          console.error("Supabase admin lookup error", authError);
+        }
+        knownUserId = authMatch?.user?.id ?? null;
+      } catch (error) {
+        console.error("Failed to check Supabase auth for email", error);
+      }
+
+      if (!knownUserId) {
+        const { data: profileMatch, error: profileError } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+        if (profileError && profileError.code !== "PGRST116") {
+          console.error("Supabase profile lookup error", profileError);
+        }
+        knownUserId = profileMatch?.id ?? null;
+      }
+    }
 
     const authHeader = request.headers.get("authorization");
     let authenticatedUserId: string | null = null;
@@ -96,7 +117,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Selected plan is no longer available" }, { status: 400 });
     }
 
-    const defaultMarkup = Number(process.env.DEFAULT_MARKUP_PCT ?? 35);
+    const defaultMarkup = Number(process.env.DEFAULT_MARKUP_PCT ?? 18);
     const markupFromCatalog = Number(catalog.markupPct);
     const markupPct = Number.isFinite(markupFromCatalog) && markupFromCatalog > 0 ? markupFromCatalog : defaultMarkup;
     const wholesaleCents = plan.priceCents;
