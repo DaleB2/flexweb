@@ -56,7 +56,7 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
     <div className="space-y-2">
       <label
         htmlFor="country-select"
-        className="text-xs font-semibold uppercase tracking-[0.28em] text-bottle/60"
+        className="text-xs font-semibold uppercase tracking-[0.28em] text-coal/60"
       >
         Choose destination
       </label>
@@ -65,7 +65,7 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
           id="country-select"
           value={selected ?? ""}
           onChange={(event) => onSelect(event.target.value)}
-          className="w-full appearance-none rounded-2xl border border-bottle/10 bg-white px-4 py-3 text-sm font-medium text-bottle shadow-inner focus:border-mint focus:outline-none focus:ring-2 focus:ring-mint/40"
+          className="w-full appearance-none rounded-2xl border border-coal/15 bg-white px-4 py-3 text-sm font-medium text-coal shadow-inner focus:border-mint focus:outline-none focus:ring-2 focus:ring-mint/40"
         >
           <option value="" disabled>
             Select a destination
@@ -76,12 +76,12 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
             </option>
           ))}
         </select>
-        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-bottle/40" aria-hidden>
+        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-coal/40" aria-hidden>
           ▾
         </span>
       </div>
       {selected && (
-        <p className="text-xs text-bottle/60">
+        <p className="text-xs text-coal/60">
           Plans priced in local partners for {countryToFlag(selected)} {getCountryName(selected) ?? selected}.
         </p>
       )}
