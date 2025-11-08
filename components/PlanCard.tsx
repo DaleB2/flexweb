@@ -59,16 +59,8 @@ export default function PlanCard() {
         setError(null);
         setCountryCode((current) => {
           if (!current) return null;
-          return fetchedCountries.includes(current.toUpperCase()) ? current.toUpperCase() : null;
-        if (!Array.isArray(json.countries) || json.countries.length === 0) {
-          throw new Error("No countries available");
-        }
-
-        setCountries(json.countries);
-        setError(null);
-        setCountryCode((current) => {
-          if (!current) return null;
-          return json.countries.includes(current) ? current : null;
+          const normalized = current.trim().toUpperCase();
+          return fetchedCountries.includes(normalized) ? normalized : null;
         });
         const markupFromResponse = json.markup_pct ?? json.markupPct;
         if (typeof markupFromResponse === "number") {
