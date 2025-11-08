@@ -1,4 +1,6 @@
-import { signHeaders } from './esim';
+import crypto from "crypto";
+
+import { buildSignatureHeaders } from "./esim";
 
 export async function orderEsim(draft: {
   slug: string;
@@ -21,7 +23,7 @@ export async function orderEsim(draft: {
   };
   const res = await fetch('https://api.esimaccess.com/api/v1/open/esim/order', {
     method: 'POST',
-    headers: signHeaders(body),
+    headers: buildSignatureHeaders(body),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error('Order eSIM failed');
