@@ -23,6 +23,7 @@ function getCountryName(code: string) {
     }
     return normalized;
   }
+  return regionNames?.of(code) ?? code;
 }
 
 function countryToFlag(code: string) {
@@ -50,6 +51,10 @@ export default function CountrySelector({ countries, selected, onSelect }: Count
         };
       })
       .filter((option) => option.code.length === 2);
+    return countries.map((code) => ({
+      code,
+      name: getCountryName(code),
+    }));
   }, [countries]);
 
   const filtered = useMemo(() => {
