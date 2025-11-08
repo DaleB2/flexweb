@@ -63,14 +63,18 @@ function parseDataGb(plan: Record<string, unknown>): number {
   );
 }
 
-function normalizePlans(rawPlans: any[]): NormalizedPlan[] {
+function normalizePlans(rawPlans: unknown[]): NormalizedPlan[] {
   return rawPlans
+    .map((plan) => (typeof plan === "object" && plan !== null ? plan : {}))
     .map((plan) => {
-      const dataGb = Number(parseDataGb(plan)) || 0;
-      const priceCents = Number(plan.wholesalePriceCents ?? plan.priceCents ?? plan.price1e2 ?? 0);
-      const periodDays = Number(plan.periodNum ?? plan.validDays ?? plan.days ?? 30);
-      const slug = (plan.slug ?? plan.packageName ?? plan.packageCode ?? "plan").toString();
-      const packageCode = (plan.packageCode ?? plan.code ?? slug).toString();
+      const record = plan as Record<string, unknown>;
+      const dataGb = Number(parseDataGb(record)) || 0;
+      const priceCents = Number(
+        record.wholesalePriceCents ?? record.priceCents ?? record.price1e2 ?? 0,
+      );
+      const periodDays = Number(record.periodNum ?? record.validDays ?? record.days ?? 30);
+      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "plan").toString();
+      const packageCode = (record.packageCode ?? record.code ?? slug).toString();
 
       return {
         slug,
@@ -78,7 +82,7 @@ function normalizePlans(rawPlans: any[]): NormalizedPlan[] {
         dataGb,
         priceCents,
         periodDays,
-        currency: plan.currency ?? DEFAULT_CURRENCY,
+        currency: (record.currency ?? DEFAULT_CURRENCY).toString(),
       } satisfies NormalizedPlan;
     })
     .filter((plan) => plan.dataGb > 0 && plan.priceCents > 0)
@@ -109,7 +113,7 @@ export async function listPlansByLocation(locationCode: string) {
   }
 
   const json = await response.json();
-  const rawPlans = json?.obj?.packageList ?? [];
+  const rawPlans = Array.isArray(json?.obj?.packageList) ? (json.obj.packageList as unknown[]) : [];
   const plans = normalizePlans(rawPlans);
 
   return {
@@ -139,7 +143,7 @@ export async function listAllCountries() {
   }
 
   const json = await response.json();
-  const rawList: any[] = json?.obj?.packageList ?? [];
+  const rawList: unknown[] = Array.isArray(json?.obj?.packageList) ? json.obj.packageList : [];
   const codes = Array.from(new Set(rawList.map((entry) => entry.locationCode).filter(Boolean)));
   return codes.sort();
 }

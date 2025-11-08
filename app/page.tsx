@@ -3,46 +3,69 @@ import PlanCard from "@/components/PlanCard";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-heroGrad">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(24,6,62,0.55),_transparent_65%)]" aria-hidden />
+    <div className="min-h-screen bg-white text-slate-900">
       <Header />
 
-      <main className="relative z-10 flex flex-col items-center gap-16 px-5 pb-24 pt-28 lg:flex-row lg:items-start lg:justify-between lg:px-16 lg:pb-32 lg:pt-36">
-        <section className="max-w-xl text-white">
-          <div className="inline-flex items-center gap-3 rounded-full bg-daisy px-5 py-2 text-xs font-extrabold uppercase tracking-[0.4em] text-bottle">
-            Up to 10× cheaper than roaming
-          </div>
-          <h1 className="mt-6 text-5xl font-extrabold uppercase leading-[0.95] tracking-tight drop-shadow-lg sm:text-6xl lg:text-7xl">
-            Unlimited
-            <br />
-            Internet that
-            <br />
-            Travels with you
+      <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pb-20 pt-32 sm:px-6 lg:flex-row lg:items-start lg:gap-24 lg:px-8">
+        <section className="max-w-xl space-y-6" id="plans">
+          <span className="inline-flex items-center rounded-full bg-mint/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-bottle">
+            Travel with confidence
+          </span>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            Unlimited internet that travels with you.
           </h1>
-          <p className="mt-6 text-lg font-medium text-white/90 drop-shadow">
-            Truly Switchless® eSIMs that activate instantly in 190+ destinations. Keep your number, stay online.
+          <p className="text-base leading-relaxed text-slate-600">
+            Flex Mobile eSIMs activate instantly in 190+ destinations. Choose your plan, pay securely, and we&apos;ll deliver setup instructions straight to your inbox.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4 text-sm font-semibold text-white/90">
-            <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur">Trusted by globetrotters</span>
-            <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur">4G/5G Speeds</span>
-            <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur">Hotspot Friendly</span>
-          </div>
+          <dl className="grid gap-4 text-sm text-slate-700 sm:grid-cols-2">
+            <div className="rounded-lg border border-slate-200 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Simple checkout</dt>
+              <dd className="mt-2 font-semibold">Pay with cards or wallets. No surprise fees.</dd>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Instant delivery</dt>
+              <dd className="mt-2 font-semibold">Get your QR code within minutes of payment.</dd>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Keep your number</dt>
+              <dd className="mt-2 font-semibold">Stay reachable on WhatsApp and calls.</dd>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-4">
+              <dt className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Hotspot ready</dt>
+              <dd className="mt-2 font-semibold">Share data safely with all your devices.</dd>
+            </div>
+          </dl>
         </section>
 
-        <aside className="w-full max-w-lg lg:sticky lg:top-24">
+        <aside className="w-full max-w-lg lg:sticky lg:top-32">
           <PlanCard />
         </aside>
       </main>
 
-      <div className="fixed bottom-4 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-4 rounded-full bg-bottle px-6 py-3 text-xs font-bold uppercase tracking-[0.3em] text-white shadow-card lg:flex">
-        <span>Switchless® ESIMs</span>
-        <span className="h-2 w-2 rounded-full bg-mint" aria-hidden />
-        <span>Best Network Guarantee</span>
-        <span className="h-2 w-2 rounded-full bg-mint" aria-hidden />
-        <span>Hotspot / Tethering</span>
-        <span className="h-2 w-2 rounded-full bg-mint" aria-hidden />
-        <span>190+ Destinations</span>
-      </div>
+      <section id="why" className="bg-slate-50 py-16">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
+          {["190+ destinations", "Switchless® setup", "4G/5G coverage"].map((highlight) => (
+            <div key={highlight} className="rounded-xl border border-slate-200 bg-white p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Why travelers choose us</p>
+              <p className="mt-4 text-lg font-semibold text-slate-800">{highlight}</p>
+              <p className="mt-2 text-sm text-slate-600">
+                Reliable networks and transparent pricing mean you can focus on your trip—not your phone bill.
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer id="help" className="border-t border-slate-200 bg-white py-10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <p className="font-semibold text-slate-700">Need a hand? Email hello@flexmobile.com</p>
+          <div className="flex flex-wrap gap-3">
+            <span className="rounded-full border border-slate-200 px-3 py-1">Best network guarantee</span>
+            <span className="rounded-full border border-slate-200 px-3 py-1">Hotspot &amp; tethering</span>
+            <span className="rounded-full border border-slate-200 px-3 py-1">Secure payments</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
