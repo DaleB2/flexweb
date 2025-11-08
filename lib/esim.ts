@@ -8,7 +8,6 @@ const DEFAULT_MARKUP = Number(process.env.DEFAULT_MARKUP_PCT ?? 35);
 
 interface EsimAccessResponse {
   success?: boolean | string | number;
-  success?: boolean | string;
   errorMessage?: unknown;
   obj?: {
     packageList?: unknown;
@@ -94,11 +93,6 @@ function normalizePlans(rawPlans: unknown[], defaultCurrency: string): Normalize
       const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "").toString();
       const packageCode = (record.packageCode ?? record.code ?? "").toString();
       const currency = (record.currency ?? record.currencyCode ?? defaultCurrency).toString().toUpperCase();
-      const currency = (record.currency ?? record.currencyCode ?? defaultCurrency).toString();
-      const periodDays = Number(record.periodNum ?? record.validDays ?? record.days ?? 30);
-      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "").toString();
-      const packageCode = (record.packageCode ?? record.code ?? "").toString();
-      const currency = (record.currency ?? DEFAULT_CURRENCY).toString();
 
       return {
         slug: slug || packageCode,
@@ -139,9 +133,6 @@ function getPriceInCents(record: Record<string, unknown>) {
     if (parsed > 0) {
       return mode === "cents" ? Math.round(parsed) : Math.round(parsed * 100);
     }
-export async function listPlansByLocation(locationCode: string) {
-  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
-    throw new Error("Missing eSIM Access credentials");
   }
 
   return 0;
@@ -188,37 +179,6 @@ export async function listPlansByLocation(locationCode: string) {
     throw new Error("Invalid location code");
   }
 
-  }
-
-  const json = (await response.json()) as EsimAccessResponse;
-  const isSuccess = json.success === true || json.success === "true" || json.success === 1;
-
-  if (!isSuccess) {
-    const message =
-      typeof json.errorMessage === "string" && json.errorMessage.trim()
-        ? json.errorMessage
-        : "eSIM Access returned an error";
-    throw new Error(message);
-  }
-
-  const list = json.obj?.packageList;
-  if (!Array.isArray(list)) {
-    throw new Error("eSIM Access response did not include packageList");
-  }
-
-  return list as unknown[];
-}
-
-export async function listPlansByLocation(locationCode: string) {
-  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
-    throw new Error("Missing eSIM Access credentials");
-  }
-
-  const trimmed = locationCode.trim().toUpperCase();
-  if (!trimmed) {
-    throw new Error("Invalid location code");
-  }
-
   const rawPlans = await fetchPackageList({ locationCode: trimmed, type: "BASE" });
   const plans = normalizePlans(rawPlans, DEFAULT_CURRENCY);
 
@@ -230,13 +190,6 @@ export async function listPlansByLocation(locationCode: string) {
 
   return {
     countryCode: trimmed,
-  if (plans.length === 0) {
-    throw new Error(`No plans returned for ${locationCode}`);
-  }
-
-  return {
-    countryCode: trimmed,
-    countryCode: locationCode,
     plans,
     markupPct: DEFAULT_MARKUP,
     markup_pct: DEFAULT_MARKUP,
