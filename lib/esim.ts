@@ -93,6 +93,10 @@ function normalizePlans(rawPlans: unknown[], defaultCurrency: string): Normalize
       const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "").toString();
       const packageCode = (record.packageCode ?? record.code ?? "").toString();
       const currency = (record.currency ?? record.currencyCode ?? defaultCurrency).toString();
+      const periodDays = Number(record.periodNum ?? record.validDays ?? record.days ?? 30);
+      const slug = (record.slug ?? record.packageName ?? record.packageCode ?? "").toString();
+      const packageCode = (record.packageCode ?? record.code ?? "").toString();
+      const currency = (record.currency ?? DEFAULT_CURRENCY).toString();
 
       return {
         slug: slug || packageCode,
@@ -133,6 +137,9 @@ function getPriceInCents(record: Record<string, unknown>) {
     if (parsed > 0) {
       return mode === "cents" ? Math.round(parsed) : Math.round(parsed * 100);
     }
+export async function listPlansByLocation(locationCode: string) {
+  if (!ESIM_ACCESS_CODE || !ESIM_SECRET) {
+    throw new Error("Missing eSIM Access credentials");
   }
 
   return 0;
@@ -186,8 +193,13 @@ export async function listPlansByLocation(locationCode: string) {
     throw new Error(`No plans returned for ${trimmed}`);
   }
 
+  if (plans.length === 0) {
+    throw new Error(`No plans returned for ${locationCode}`);
+  }
+
   return {
     countryCode: trimmed,
+    countryCode: locationCode,
     plans,
     markupPct: DEFAULT_MARKUP,
     markup_pct: DEFAULT_MARKUP,
