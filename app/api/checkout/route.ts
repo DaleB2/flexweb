@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { listPlansByLocation } from "@/lib/esim";
 
 export const dynamic = "force-dynamic";
 
 interface CheckoutDraft {
   countryCode: string;
-  country?: string;
+  country?: string | null;
   slug: string;
   packageCode: string;
   dataGb: number;
@@ -59,16 +60,17 @@ export async function POST(request: NextRequest) {
     }
 
     const draft = parseDraft(body.draft ?? {});
-    if (!Number.isFinite(draft.totalCents) || draft.totalCents <= 0) {
-      return NextResponse.json({ error: "Invalid total" }, { status: 400 });
-    }
 
     const supabaseAdmin = getSupabaseAdmin();
-    const existingUser = supabaseAdmin
-      ? await supabaseAdmin.from("profiles").select("id, email").eq("email", email).maybeSingle()
-      : { data: null };
+    const existingProfile = supabaseAdmin
+      ? (await supabaseAdmin.from("profiles").select("id").eq("email", email).maybeSingle())?.data ?? null
+      : null;
+    let knownUserId = existingProfile?.id ?? null;
 
-    const existingProfile = existingUser?.data ?? null;
+    if (!knownUserId && supabaseAdmin) {
+      const { data: userLookup } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+      knownUserId = userLookup?.user?.id ?? null;
+    }
     const authHeader = request.headers.get("authorization");
     let authenticatedUserId: string | null = null;
 
@@ -78,30 +80,74 @@ export async function POST(request: NextRequest) {
       authenticatedUserId = data.user?.id ?? null;
     }
 
-    if (existingProfile) {
+    if (knownUserId) {
       if (!authenticatedUserId) {
         return NextResponse.json({ requiresLogin: true }, { status: 409 });
       }
-      if (existingProfile.id !== authenticatedUserId) {
+      if (knownUserId !== authenticatedUserId) {
         return NextResponse.json({ requiresLogin: true }, { status: 403 });
       }
     }
 
+    const catalog = await listPlansByLocation(draft.countryCode);
+    const plan = catalog.plans.find(
+      (candidate) =>
+        candidate.packageCode.toLowerCase() === draft.packageCode.toLowerCase() ||
+        candidate.slug.toLowerCase() === draft.slug.toLowerCase(),
+    );
+
+    if (!plan) {
+      return NextResponse.json({ error: "Selected plan is no longer available" }, { status: 400 });
+    }
+
+    const defaultMarkup = Number(process.env.DEFAULT_MARKUP_PCT ?? 35);
+    const markupFromCatalog = Number(catalog.markupPct);
+    const markupPct = Number.isFinite(markupFromCatalog) && markupFromCatalog > 0 ? markupFromCatalog : defaultMarkup;
+    const wholesaleCents = plan.priceCents;
+    const totalCents = Math.max(1, Math.ceil(wholesaleCents * (1 + markupPct / 100)));
+    const currency = (plan.currency ?? catalog.currency ?? draft.currency ?? "USD").toString().toUpperCase();
+    const sanitizedDraft: CheckoutDraft = {
+      countryCode: catalog.countryCode ?? draft.countryCode,
+      country: draft.country ?? null,
+      slug: plan.slug,
+      packageCode: plan.packageCode,
+      dataGb: plan.dataGb,
+      periodDays: plan.periodDays,
+      wholesaleCents,
+      markupPct,
+      totalCents,
+      currency,
+    };
+
+    const metadataDraft = {
+      ...sanitizedDraft,
+    } satisfies CheckoutDraft;
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: draft.totalCents,
-      currency: draft.currency,
+      amount: sanitizedDraft.totalCents,
+      currency: sanitizedDraft.currency.toLowerCase(),
       automatic_payment_methods: { enabled: true },
       receipt_email: email,
       metadata: {
         email,
-        draft: JSON.stringify(draft),
+        draft: JSON.stringify(metadataDraft),
+        country_code: sanitizedDraft.countryCode,
+        package_code: sanitizedDraft.packageCode,
+        data_gb: sanitizedDraft.dataGb.toString(),
+        period_days: sanitizedDraft.periodDays.toString(),
+        wholesale_cents: sanitizedDraft.wholesaleCents.toString(),
+        markup_pct: sanitizedDraft.markupPct.toString(),
+        total_cents: sanitizedDraft.totalCents.toString(),
+        currency: sanitizedDraft.currency,
+        make_notified: "0",
       },
     });
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
-      requiresLogin: Boolean(existingProfile),
+      requiresLogin: Boolean(knownUserId),
+      draft: sanitizedDraft,
     });
   } catch (error) {
     console.error("Checkout error", error);

@@ -14,10 +14,10 @@ interface CatalogResponse {
 }
 
 const featureBadges = [
-  "4G/5G Speeds",
-  "Switchless® eSIMs",
-  "Hotspot/Tethering",
-  "Best Network Guarantee",
+  "Instant activation",
+  "Use on unlocked phones",
+  "Keep WhatsApp active",
+  "Share hotspot",
 ];
 
 export default function PlanCard() {
@@ -121,65 +121,61 @@ export default function PlanCard() {
   }, [activePlan, countryCode, countryName, currency, markupPct, router]);
 
   return (
-    <div className="relative flex flex-col gap-6 rounded-[20px] bg-white/90 p-6 shadow-card backdrop-blur-xl lg:p-8">
+    <div className="flex flex-col gap-7 rounded-[32px] border border-white/40 bg-white/90 p-7 text-coal shadow-[0_35px_80px_rgba(9,41,39,0.35)] backdrop-blur lg:p-9">
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-bottle/60">
-            <span>Countries</span>
-            <span className="rounded-full bg-bottle/10 px-3 py-1 text-[10px]">190+</span>
-          </div>
-          <h2 className="text-2xl font-extrabold text-bottle lg:text-3xl">Pick your destination</h2>
+        <div className="space-y-1">
+          <p className="text-xs font-bold uppercase tracking-[0.4em] text-coal/50">Destination</p>
+          <h2 className="text-3xl font-extrabold leading-tight lg:text-4xl">Pick where you&apos;re heading</h2>
         </div>
-        <div className="hidden flex-col items-end text-right text-xs font-semibold text-bottle/50 sm:flex">
-          <span>Powered by eSIM Access</span>
-          <span>Real-time inventory</span>
-        </div>
+        <span className="hidden text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-coal/40 sm:inline">
+          Powered by eSIM Access
+        </span>
       </div>
 
-      <div className="flex gap-2 rounded-full bg-bottle/10 p-1 text-xs font-bold uppercase tracking-[0.3em] text-bottle/50">
+      <div className="flex gap-2 rounded-full bg-coal/5 p-1 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-coal/50">
         <button
           type="button"
           className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "unlimited" ? "bg-white text-bottle shadow" : "hover:text-bottle"
+            mode === "unlimited"
+              ? "bg-coal text-white shadow-[0_16px_40px_rgba(6,8,8,0.25)]"
+              : "hover:text-coal"
           }`}
           onClick={() => setMode("unlimited")}
         >
-          Unlimited Data
+          Unlimited data
         </button>
         <button
           type="button"
           className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "metered" ? "bg-white text-bottle" : "opacity-50"
+            mode === "metered" ? "bg-coal text-white" : "opacity-40"
           }`}
           disabled
         >
-          Pay Per GB
+          Pay per GB
         </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr]">
-        <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} />
-      </div>
+      <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {featureBadges.map((badge) => (
-          <span
+          <div
             key={badge}
-            className="inline-flex items-center justify-center rounded-full bg-mint px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-bottle shadow-sm"
+            className="rounded-2xl border border-coal/10 bg-coal/5 px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-coal"
           >
             {badge}
-          </span>
+          </div>
         ))}
       </div>
 
       <div>
         {isLoadingPlans ? (
           <div className="space-y-4">
-            <div className="h-5 animate-pulse rounded-xl bg-bottle/10" />
-            <div className="h-24 animate-pulse rounded-2xl bg-bottle/10" />
+            <div className="h-5 animate-pulse rounded-lg bg-slate-100" />
+            <div className="h-24 animate-pulse rounded-2xl bg-slate-100" />
           </div>
         ) : error ? (
-          <div className="rounded-2xl bg-daisy/30 p-4 text-sm font-semibold text-bottle">{error}</div>
+          <div className="rounded-2xl border border-persian/30 bg-persian/5 p-4 text-sm font-semibold text-persian">{error}</div>
         ) : plans.length > 0 ? (
           <PlanSlider
             plans={plans}
@@ -189,7 +185,7 @@ export default function PlanCard() {
             onChange={setSelectedIndex}
           />
         ) : (
-          <div className="rounded-2xl bg-white/80 p-6 text-center text-sm font-semibold text-bottle/60 shadow-inner">
+          <div className="rounded-2xl border border-coal/10 bg-coal/5 p-6 text-center text-sm font-semibold text-coal/70">
             Select a destination to see available plans.
           </div>
         )}
@@ -199,15 +195,15 @@ export default function PlanCard() {
         type="button"
         onClick={handleContinue}
         disabled={!activePlan || !countryCode || isLoadingPlans}
-        className="group flex w-full items-center justify-between rounded-[18px] bg-mint px-6 py-4 text-bottle transition hover:translate-y-[-1px] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex w-full items-center justify-between rounded-2xl bg-coal px-6 py-5 text-white shadow-[0_20px_45px_rgba(6,8,8,0.3)] transition hover:scale-[1.01] hover:bg-coal/90 disabled:cursor-not-allowed disabled:scale-100 disabled:bg-coal/40"
       >
         <div className="text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">Continue</p>
-          <p className="text-lg font-extrabold">
+          <p className="text-[0.7rem] font-bold uppercase tracking-[0.35em] text-white/60">Continue</p>
+          <p className="text-xl font-extrabold">
             {activePlan ? formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency) : "Pick a plan"}
           </p>
         </div>
-        <div className="text-right text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">
+        <div className="text-right text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-white/50">
           {countryCode ? countryName : "Destination"}
         </div>
       </button>

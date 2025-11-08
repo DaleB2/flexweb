@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
@@ -22,6 +22,12 @@ type Draft = {
   markupPct: number;
   totalCents: number;
   currency: string;
+};
+
+type CheckoutResponse = {
+  clientSecret?: string;
+  requiresLogin?: boolean;
+  draft?: Draft;
 };
 
 function parseDraft(params: URLSearchParams): Draft | null {
@@ -75,38 +81,38 @@ function CheckoutSummary({ draft }: { draft: Draft }) {
     : "";
 
   return (
-    <aside className="space-y-6 rounded-[20px] bg-white p-6 shadow-card">
+    <aside className="space-y-7 rounded-[32px] border border-white/20 bg-white/10 p-7 text-white shadow-[0_25px_70px_rgba(0,0,0,0.35)] backdrop-blur">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl" aria-hidden>
             {flag}
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Destination</p>
-            <p className="text-lg font-bold text-bottle">{draft.country ?? draft.countryCode}</p>
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-white/60">Destination</p>
+            <p className="text-2xl font-extrabold">{draft.country ?? draft.countryCode}</p>
           </div>
         </div>
-        <Link href="/" className="text-xs font-semibold uppercase tracking-[0.2em] text-bottle/60 hover:text-bottle">
+        <Link href="/" className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60 transition hover:text-white">
           Change
         </Link>
       </div>
-      <div className="rounded-2xl border border-bottle/10 bg-nurse p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Plan</p>
-        <p className="text-lg font-bold text-bottle">
+      <div className="rounded-2xl border border-white/20 bg-white/10 p-5">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">Plan</p>
+        <p className="mt-2 text-xl font-extrabold text-white">
           {draft.dataGb} GB • {draft.periodDays} days
         </p>
-        <p className="text-sm font-semibold text-bottle/60">Unlimited data</p>
+        <p className="mt-1 text-sm font-semibold text-white/70">Unlimited data</p>
       </div>
-      <div className="rounded-2xl bg-bottle px-5 py-6 text-white">
+      <div className="rounded-3xl bg-mint/95 px-6 py-7 text-coal shadow-[0_20px_60px_rgba(47,239,204,0.4)]">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">Total</span>
-          <span className="text-3xl font-extrabold">{total}</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-[0.35em] text-coal/60">Total</span>
+          <span className="text-4xl font-black">{total}</span>
         </div>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/60">
+        <p className="mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-coal/70">
           Starts from {perDay} / day
         </p>
       </div>
-      <ul className="space-y-2 text-sm font-semibold text-bottle/70">
+      <ul className="space-y-2 text-sm font-semibold text-white/70">
         <li>• Instant delivery after payment</li>
         <li>• Works on unlocked eSIM-ready devices</li>
         <li>• Keep your WhatsApp number active</li>
@@ -141,13 +147,13 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-bottle/10 bg-white/70 p-5 backdrop-blur">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur">
       <div>
-        <h3 className="text-lg font-bold text-bottle">Welcome back</h3>
-        <p className="text-sm font-medium text-bottle/60">Log in to continue checkout for {email}.</p>
+        <h3 className="text-xl font-extrabold">Welcome back</h3>
+        <p className="text-sm font-semibold text-white/70">Log in to continue checkout for {email}.</p>
       </div>
       <div>
-        <label htmlFor="password" className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">
+        <label htmlFor="password" className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">
           Password
         </label>
         <input
@@ -156,14 +162,14 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-2 w-full rounded-xl border border-bottle/10 bg-white px-4 py-3 text-sm font-medium text-bottle focus:border-mint focus:outline-none"
+          className="mt-2 w-full rounded-xl border border-white/30 bg-white/80 px-4 py-3 text-sm font-semibold text-coal placeholder:text-coal/40 focus:border-mint focus:outline-none"
         />
       </div>
-      {error && <p className="text-sm font-semibold text-persian">{error}</p>}
+      {error && <p className="text-sm font-semibold text-daisy">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full bg-bottle px-5 py-3 text-sm font-bold uppercase tracking-[0.3em] text-white transition hover:bg-bottle/90 disabled:opacity-40"
+        className="w-full rounded-full bg-mint px-5 py-3 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_16px_45px_rgba(47,239,204,0.5)] transition hover:scale-[1.02] disabled:opacity-40"
       >
         {loading ? "Signing in…" : "Log in"}
       </button>
@@ -208,19 +214,19 @@ function PaymentStep({ draft, email }: { draft: Draft; email: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="rounded-2xl border border-bottle/10 bg-white/70 p-5 backdrop-blur">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">Pay with card or wallet</p>
+      <div className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white/80 backdrop-blur">
+        <p className="mb-4 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">Pay with card or wallet</p>
         <PaymentElement options={{ layout: "tabs" }} />
       </div>
-      {error && <div className="rounded-xl bg-persian/10 px-4 py-3 text-sm font-semibold text-persian">{error}</div>}
+      {error && <div className="rounded-xl border border-daisy/40 bg-daisy/20 px-4 py-3 text-sm font-semibold text-coal">{error}</div>}
       <button
         type="submit"
         disabled={!stripe || !elements || loading}
-        className="w-full rounded-[18px] bg-mint px-6 py-4 text-sm font-extrabold uppercase tracking-[0.3em] text-bottle transition hover:shadow-lg disabled:opacity-40"
+        className="w-full rounded-full bg-mint px-6 py-4 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.45)] transition hover:scale-[1.02] disabled:opacity-40"
       >
         {loading ? "Processing…" : `Pay ${formatter.format(draft.totalCents / 100)}`}
       </button>
-      <p className="text-xs font-medium text-bottle/50">
+      <p className="text-xs font-semibold text-white/60">
         By paying you agree to receive your eSIM via email for {email}. We’ll activate it instantly when you land.
       </p>
     </form>
@@ -229,7 +235,8 @@ function PaymentStep({ draft, email }: { draft: Draft; email: string }) {
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams();
-  const draft = useMemo(() => parseDraft(searchParams), [searchParams]);
+  const parsedDraft = useMemo(() => parseDraft(searchParams), [searchParams]);
+  const [checkoutDraft, setCheckoutDraft] = useState<Draft | null>(parsedDraft);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -237,13 +244,20 @@ export default function CheckoutPage() {
   const [requiresLogin, setRequiresLogin] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
 
-  if (!draft) {
+  useEffect(() => {
+    setCheckoutDraft(parsedDraft);
+  }, [parsedDraft]);
+
+  if (!parsedDraft || !checkoutDraft) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-nurse p-6">
-        <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-card">
-          <p className="text-lg font-bold text-bottle">We couldn’t find your selection.</p>
-          <p className="mt-2 text-sm text-bottle/60">Start again from the homepage to pick a plan.</p>
-          <Link href="/" className="mt-6 inline-flex rounded-full bg-bottle px-5 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white">
+      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet via-coal to-royal p-6 text-white">
+        <div className="max-w-md rounded-3xl border border-white/20 bg-white/10 p-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.4)] backdrop-blur">
+          <p className="text-2xl font-extrabold">We couldn’t find your selection.</p>
+          <p className="mt-3 text-sm font-semibold text-white/70">Start again from the homepage to pick a plan.</p>
+          <Link
+            href="/"
+            className="mt-6 inline-flex rounded-full bg-mint px-6 py-3 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.45)] transition hover:scale-[1.03]"
+          >
             Back home
           </Link>
         </div>
@@ -263,7 +277,7 @@ export default function CheckoutPage() {
           "Content-Type": "application/json",
           ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
         },
-        body: JSON.stringify({ email, draft }),
+        body: JSON.stringify({ email, draft: checkoutDraft }),
       });
 
       if (response.status === 409 || response.status === 403) {
@@ -276,9 +290,12 @@ export default function CheckoutPage() {
         throw new Error(json.error ?? "Failed to start checkout");
       }
 
-      const json = await response.json();
+      const json: CheckoutResponse = await response.json();
       setClientSecret(json.clientSecret ?? null);
       setRequiresLogin(Boolean(json.requiresLogin));
+      if (json.draft) {
+        setCheckoutDraft(json.draft);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -293,28 +310,33 @@ export default function CheckoutPage() {
 
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: draft.currency,
+    currency: checkoutDraft.currency,
     minimumFractionDigits: 0,
   });
 
   return (
-    <main className="min-h-screen bg-heroGrad px-5 py-16 lg:px-16">
-      <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1.1fr_1fr]">
-        <CheckoutSummary draft={draft} />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-violet via-coal to-royal px-4 py-20 text-white sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-[-10%] top-20 h-[420px] w-[420px] rounded-full bg-heliotrope/40 blur-[160px]" />
+        <div className="absolute right-[-15%] top-40 h-[520px] w-[520px] rounded-full bg-mint/40 blur-[180px]" />
+        <div className="absolute inset-x-0 bottom-[-30%] h-[420px] bg-gradient-to-t from-coal via-transparent to-transparent" />
+      </div>
+      <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1.05fr_1fr]">
+        <CheckoutSummary draft={checkoutDraft} />
 
-        <section className="space-y-6 rounded-[20px] bg-white/80 p-6 shadow-card backdrop-blur">
+        <section className="space-y-7 rounded-[32px] border border-white/20 bg-white/10 p-7 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Checkout</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-bottle">Secure payment</h2>
-            <p className="text-sm font-medium text-bottle/60">
-              Your plan total is {formatter.format(draft.totalCents / 100)}. Enter your email to continue.
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">Checkout</p>
+            <h2 className="mt-3 text-3xl font-extrabold text-white">Secure payment</h2>
+            <p className="mt-2 text-sm font-semibold text-white/70">
+              Your plan total is {formatter.format(checkoutDraft.totalCents / 100)}. Enter your email to continue.
             </p>
           </div>
 
           {!clientSecret && (
             <form onSubmit={handleCreateIntent} className="space-y-4">
               <div>
-                <label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/60">
+                <label htmlFor="email" className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">
                   Email address
                 </label>
                 <input
@@ -323,14 +345,14 @@ export default function CheckoutPage() {
                   required
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-bottle/10 bg-white px-4 py-3 text-sm font-medium text-bottle focus:border-mint focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-white/30 bg-white/85 px-4 py-3 text-sm font-semibold text-coal placeholder:text-coal/40 focus:border-mint focus:outline-none"
                 />
               </div>
-              {error && <div className="rounded-xl bg-persian/10 px-4 py-3 text-sm font-semibold text-persian">{error}</div>}
+              {error && <div className="rounded-xl border border-daisy/40 bg-daisy/20 px-4 py-3 text-sm font-semibold text-coal">{error}</div>}
               <button
                 type="submit"
                 disabled={loading || !email}
-                className="w-full rounded-[18px] bg-mint px-6 py-4 text-sm font-extrabold uppercase tracking-[0.3em] text-bottle transition hover:shadow-lg disabled:opacity-40"
+                className="w-full rounded-full bg-mint px-6 py-4 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.45)] transition hover:scale-[1.02] disabled:opacity-40"
               >
                 {loading ? "Checking…" : "Continue"}
               </button>
@@ -343,16 +365,16 @@ export default function CheckoutPage() {
 
           {clientSecret && stripePromise && (
             <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentStep draft={draft} email={email} />
+              <PaymentStep draft={checkoutDraft} email={email} />
             </Elements>
           )}
           {clientSecret && !stripePromise && (
-            <div className="rounded-xl bg-persian/10 px-4 py-3 text-sm font-semibold text-persian">
+            <div className="rounded-xl border border-daisy/40 bg-daisy/20 px-4 py-3 text-sm font-semibold text-coal">
               Stripe publishable key is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to continue.
             </div>
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 }
