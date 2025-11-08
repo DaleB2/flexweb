@@ -47,6 +47,19 @@ export default function PlanCard() {
         }
         if (cancelled) return;
 
+        const fetchedCountries = Array.isArray(json.countries)
+          ? json.countries.map((code) => code.trim().toUpperCase()).filter((code) => code)
+          : [];
+
+        if (fetchedCountries.length === 0) {
+          throw new Error("No countries available");
+        }
+
+        setCountries(fetchedCountries);
+        setError(null);
+        setCountryCode((current) => {
+          if (!current) return null;
+          return fetchedCountries.includes(current.toUpperCase()) ? current.toUpperCase() : null;
         if (!Array.isArray(json.countries) || json.countries.length === 0) {
           throw new Error("No countries available");
         }
@@ -92,7 +105,8 @@ export default function PlanCard() {
 
     const loadPlans = async () => {
       try {
-        const response = await fetch(`/api/catalog?countryCode=${countryCode}`, { cache: "no-store" });
+        const normalizedCode = countryCode.trim().toUpperCase();
+        const response = await fetch(`/api/catalog?countryCode=${normalizedCode}`, { cache: "no-store" });
         const json: CatalogResponse = await response.json();
         if (!response.ok) {
           throw new Error(json.error ?? "Failed to load plans");
