@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Truely-like baseline */
+:root {
+  --card-bg: #ffffff;
+}
+
+html, body { height: 100%; }
+body { @apply font-pop text-coal bg-white; }
+
+.badge {
+  @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold bg-mint text-bottle;
+}
