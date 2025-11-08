@@ -6,176 +6,190 @@ import PlanCard from "@/components/PlanCard";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-coal text-white">
+    <div className="min-h-screen bg-gradient-to-b from-white via-[#F4FBFF] to-[#FFF6EF] text-bottle">
       <Header />
 
-      <main className="relative isolate overflow-hidden pb-28 pt-32">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-[-15%] top-0 h-[520px] w-[520px] rounded-full bg-mint/40 blur-[150px]" />
-          <div className="absolute right-[-20%] top-24 h-[600px] w-[600px] rounded-full bg-heliotrope/40 blur-[180px]" />
-          <div className="absolute inset-x-0 bottom-[-40%] h-[500px] bg-gradient-to-t from-violet via-coal to-transparent" />
-        </div>
-
-        <div className="mx-auto flex max-w-6xl flex-col gap-16 px-4 sm:px-6 lg:flex-row lg:items-start lg:gap-24 lg:px-8">
-          <section className="max-w-2xl space-y-8" id="plans">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-white/80 shadow-[0_14px_30px_rgba(255,255,255,0.08)]">
-              <span className="h-2 w-2 rounded-full bg-mint" aria-hidden />
-              Unlimited travel internet
-            </span>
-            <h1 className="text-4xl font-extrabold leading-tight sm:text-6xl">
-              Switch on <span className="text-mint">vacay mode.</span>
-              <br />
-              Leave roaming rip-offs behind.
-            </h1>
-            <p className="text-lg leading-relaxed text-white/70">
-              Flex Mobile keeps you online in 190+ countries with Switchless® eSIM tech, neon-fast activations, and pricing that slaps. Choose a plan, tap to pay, and your QR lands in your inbox before the wheels hit the runway.
-            </p>
-            <div className="flex flex-wrap gap-3 text-sm font-semibold uppercase tracking-[0.3em] text-white/60">
-              <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2">4G/5G Speeds</span>
-              <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2">Hotspot Friendly</span>
-              <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2">Keep WhatsApp</span>
-            </div>
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-              <Link
-                href="#why"
-                className="inline-flex items-center justify-center rounded-full bg-mint px-8 py-4 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.55)] transition hover:scale-[1.03]"
-              >
-                Why Flex?
-              </Link>
-              <div className="flex items-center gap-3 text-left text-sm text-white/70">
+      <main className="pb-24 pt-28">
+        <section id="plans" className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="pointer-events-none absolute inset-x-0 top-6 -z-10 flex justify-center">
+            <div className="h-72 w-full max-w-5xl rounded-full bg-gradient-to-r from-mint/20 via-anakiwa/30 to-daisy/30 blur-3xl" />
+          </div>
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+            <div className="space-y-8">
+              <span className="inline-flex items-center gap-2 rounded-full bg-bottle/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-bottle/70">
+                <span className="h-2 w-2 rounded-full bg-mint" aria-hidden />
+                Global travel eSIM
+              </span>
+              <h1 className="text-4xl font-semibold leading-tight text-bottle sm:text-5xl">
+                Roam easy from Marrakech souks to Seoul night markets.
+              </h1>
+              <p className="max-w-xl text-lg leading-relaxed text-bottle/70">
+                Flex Mobile pairs switchless eSIM tech with fair, transparent pricing. Choose a destination, receive your QR instantly, and stream, navigate, and share without worrying about roaming shocks.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  { label: "Destinations", value: "190+" },
+                  { label: "Average setup", value: "2 min" },
+                  { label: "Support", value: "24/7" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="rounded-2xl border border-bottle/10 bg-white/80 p-4 text-left shadow-sm">
+                    <p className="text-2xl font-semibold text-bottle">{value}</p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.28em] text-bottle/50">{label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                <Link
+                  href="/checkout"
+                  className="inline-flex items-center justify-center rounded-full bg-bottle px-8 py-4 text-sm font-semibold uppercase tracking-[0.3em] text-white transition hover:opacity-90"
+                >
+                  Start checkout
+                </Link>
+                <Link
+                  href="#why"
+                  className="inline-flex items-center justify-center rounded-full border border-bottle/20 bg-white/70 px-8 py-4 text-sm font-semibold uppercase tracking-[0.3em] text-bottle transition hover:border-bottle/40"
+                >
+                  Why travelers choose us
+                </Link>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl bg-white/70 p-4 text-sm text-bottle/70 shadow-inner">
                 <Image
-                  src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=96&q=80"
-                  alt="Happy traveler"
-                  width={48}
-                  height={48}
-                  className="h-12 w-12 rounded-full object-cover"
+                  src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=120&q=80"
+                  alt="Travelers sharing tea"
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 rounded-full object-cover"
                   priority={false}
                 />
                 <p>
-                  “I activated before customs. Insta stories stayed lit the entire trip.”
-                  <span className="block text-xs font-semibold uppercase tracking-[0.3em] text-white/40">— Jess, Seoul</span>
+                  "I landed in Dakar, scanned the QR in the taxi, and joined my video stand-up on time. The local tips in the welcome email were a nice touch."
+                  <span className="block text-xs uppercase tracking-[0.28em] text-bottle/40">— Amara, Product lead working remotely</span>
                 </p>
               </div>
             </div>
-          </section>
 
-          <aside className="w-full max-w-lg lg:sticky lg:top-36">
-            <PlanCard />
-          </aside>
-        </div>
+            <aside className="w-full max-w-lg lg:sticky lg:top-32">
+              <PlanCard />
+            </aside>
+          </div>
+        </section>
+
+        <section className="mt-20 border-y border-bottle/10 bg-white/70 py-8">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 px-4 text-sm font-semibold uppercase tracking-[0.28em] text-bottle/60 sm:px-6 lg:px-8">
+            <span className="flex items-center gap-2"><span className="text-xl">🌍</span>Local partner networks</span>
+            <span className="flex items-center gap-2"><span className="text-xl">🕌</span>Respectful roaming guidance</span>
+            <span className="flex items-center gap-2"><span className="text-xl">🍜</span>Culture-first travel tips</span>
+            <span className="flex items-center gap-2"><span className="text-xl">🛟</span>Real crew, any timezone</span>
+          </div>
+        </section>
+
+        <section id="why" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="space-y-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Why it feels effortless</p>
+              <h2 className="text-3xl font-semibold text-bottle sm:text-4xl">Designed with global communities in mind</h2>
+              <p className="text-base leading-relaxed text-bottle/70">
+                From festival hopping in Rio to remote work weeks in Lisbon, Flex Mobile keeps you connected without overshadowing the local experience. Every plan pairs reliable connectivity with cultural briefings sourced from residents and frequent flyers.
+              </p>
+              <ul className="space-y-3 text-sm text-bottle/70">
+                <li className="flex items-start gap-3">
+                  <span aria-hidden className="mt-1 text-bottle">✔</span>
+                  Curated welcome notes with etiquette tips for greetings, tipping, and transit in your chosen country.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span aria-hidden className="mt-1 text-bottle">✔</span>
+                  Automatic timezone awareness so support responds in your daylight hours.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span aria-hidden className="mt-1 text-bottle">✔</span>
+                  Pricing converted upfront — no surprise fees or conversions mid-trip.
+                </li>
+              </ul>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[
+                {
+                  title: "City breaks",
+                  description: "Weekend essentials for art walks in Mexico City or brunch in Copenhagen.",
+                  icon: "🎨",
+                },
+                {
+                  title: "Sacred journeys",
+                  description: "Connectivity that respects prayer times in Istanbul or Varanasi.",
+                  icon: "🕯️",
+                },
+                {
+                  title: "Food pilgrimages",
+                  description: "Stream your ramen crawl in Tokyo while staying on local data partners.",
+                  icon: "🍲",
+                },
+                {
+                  title: "Work-from-anywhere",
+                  description: "Secure hotspots for collaboration from Nairobi to New York.",
+                  icon: "💻",
+                },
+              ].map(({ title, description, icon }) => (
+                <div key={title} className="rounded-3xl border border-bottle/10 bg-white/80 p-6 shadow-sm">
+                  <span className="text-2xl" aria-hidden>
+                    {icon}
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold text-bottle">{title}</h3>
+                  <p className="mt-2 text-sm text-bottle/70">{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-2">
+            <div className="rounded-3xl border border-bottle/10 bg-white/90 p-8 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">How it works</p>
+              <h2 className="mt-4 text-3xl font-semibold text-bottle">Three steps to dependable data</h2>
+              <ol className="mt-6 space-y-5 text-sm text-bottle/70">
+                {[
+                  "Pick your destination and data style from the dropdown.",
+                  "Checkout with Stripe — taxes and currency conversion are locked in before you pay.",
+                  "Scan the QR we email, switch on data roaming, and you're live.",
+                ].map((step, index) => (
+                  <li key={step} className="flex items-start gap-4">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-bottle/10 text-sm font-semibold text-bottle">
+                      {index + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="rounded-3xl border border-bottle/10 bg-white/90 p-8 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Community signals</p>
+              <h2 className="mt-4 text-3xl font-semibold text-bottle">Loved by travelers everywhere</h2>
+              <div className="mt-6 space-y-5 text-sm text-bottle/70">
+                <p>
+                  "Flex kept us connected during the Lunar New Year rush in Hanoi. The cultural do's & don'ts email helped our team show respect at temples."
+                  <span className="mt-2 block text-xs uppercase tracking-[0.3em] text-bottle/40">Lan & Malik · Creative duo</span>
+                </p>
+                <p>
+                  "Data stayed strong while volunteering in the Atlas Mountains. Being able to top up with local pricing meant more funds for the project."
+                  <span className="mt-2 block text-xs uppercase tracking-[0.3em] text-bottle/40">Sonia · Community organizer</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <section className="border-y border-white/10 bg-daisy/95 py-5 text-coal">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 px-4 text-sm font-bold uppercase tracking-[0.35em] sm:px-6 lg:px-8">
-          <span className="flex items-center gap-2"><span className="text-2xl">🌍</span>190+ Countries</span>
-          <span className="flex items-center gap-2"><span className="text-2xl">⚡</span>2-Min Activation</span>
-          <span className="flex items-center gap-2"><span className="text-2xl">🛫</span>Roam Like Local</span>
-          <span className="flex items-center gap-2"><span className="text-2xl">🛟</span>24/7 Crew</span>
-        </div>
-      </section>
-
-      <section id="why" className="bg-white py-24 text-coal">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.45em] text-persian">Why Switchless® is a game-changer</p>
-            <h2 className="mt-4 text-4xl font-extrabold sm:text-5xl">The neon-clear difference</h2>
-            <p className="mt-4 text-lg text-coal/80">
-              Old-school roaming keeps you on hold. Flex Mobile beams data straight to your phone, no drama, no hidden fees.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-8 lg:grid-cols-2">
-            <div className="rounded-3xl bg-coal p-10 text-white shadow-[0_25px_60px_rgba(9,41,39,0.35)]">
-              <h3 className="text-2xl font-extrabold uppercase tracking-[0.4em] text-mint">Flex Mobile</h3>
-              <ul className="mt-6 space-y-4 text-lg font-semibold text-white/90">
-                <li className="flex items-start gap-3"><span className="mt-1 text-mint">✔</span> Unlimited or massive data buckets built for TikTok and tethering.</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-mint">✔</span> Switchless® install — scan QR, go live in two minutes flat.</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-mint">✔</span> Real humans on support, not bots, ready 24/7.</li>
-                <li className="flex items-start gap-3"><span className="mt-1 text-mint">✔</span> Pricing locked — what you see on checkout is what Stripe charges.</li>
-              </ul>
-            </div>
-            <div className="rounded-3xl border-4 border-dashed border-coal/20 bg-white p-10 text-coal/70 shadow-inner">
-              <h3 className="text-2xl font-extrabold uppercase tracking-[0.4em] text-coal/50">Competitor eSIM</h3>
-              <ul className="mt-6 space-y-4 text-lg font-semibold">
-                <li className="flex items-start gap-3"><span className="mt-1">✖</span> Pay-per-MB plans that throttle once you actually travel.</li>
-                <li className="flex items-start gap-3"><span className="mt-1">✖</span> Manual activations, support tickets, and QR codes that take days.</li>
-                <li className="flex items-start gap-3"><span className="mt-1">✖</span> Surprise taxes and “processing fees” stacked at the end.</li>
-                <li className="flex items-start gap-3"><span className="mt-1">✖</span> Limited hotspot support or carrier bans on tethering.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-coal py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-2">
-            {[{
-              title: "Flexible data or truly unlimited",
-              copy: "Pick the vibe — marathon hotspotting or casual scrolling. Plans flex from 3GB weekenders to all-you-can-surf monsters.",
-              accent: "bg-heliotrope",
-              emoji: "💫",
-            }, {
-              title: "Set up in 2 minutes flat",
-              copy: "iOS or Android. Scan the QR from your confirmation email, toggle on data roaming, and you’re connected.",
-              accent: "bg-anakiwa",
-              emoji: "⚙️",
-            }, {
-              title: "Always fast, always on",
-              copy: "Local-tier 4G/5G partners keep speeds spicy. Stream, hotspot, share without drops.",
-              accent: "bg-daisy",
-              emoji: "🚀",
-            }, {
-              title: "Earn while you travel",
-              copy: "Refer your travel crew and stack credits toward your next trip’s data binge.",
-              accent: "bg-mint",
-              emoji: "💸",
-            }].map(({ title, copy, accent, emoji }) => (
-              <div
-                key={title}
-                className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_25px_60px_rgba(0,0,0,0.25)] transition hover:-translate-y-1 hover:shadow-[0_40px_90px_rgba(0,0,0,0.35)]`}
-              >
-                <div className={`absolute right-6 top-6 h-16 w-16 rounded-2xl ${accent} blur-[40px] opacity-50 transition group-hover:opacity-80`} aria-hidden />
-                <span className="text-3xl">{emoji}</span>
-                <h3 className="mt-6 text-2xl font-extrabold text-white">{title}</h3>
-                <p className="mt-4 text-base leading-relaxed text-white/70">{copy}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white py-24 text-coal">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-4 text-center sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.45em] text-persian">How it works</p>
-          <h2 className="text-4xl font-extrabold sm:text-5xl">Three taps to touchdown-ready internet</h2>
-          <ol className="grid gap-6 text-left sm:grid-cols-3">
-            {["Pick your destination & data vibe.", "Checkout with the real Stripe total we send.", "Scan the QR. Toggle data. Go live."].map((step, index) => (
-              <li key={step} className="rounded-3xl border border-coal/10 bg-nurse p-6 shadow-[0_20px_60px_rgba(24,6,62,0.1)]">
-                <span className="text-sm font-bold uppercase tracking-[0.35em] text-persian/80">Step {index + 1}</span>
-                <p className="mt-4 text-xl font-extrabold text-coal">{step}</p>
-              </li>
-            ))}
-          </ol>
-          <Link
-            href="/checkout"
-            className="inline-flex items-center justify-center rounded-full bg-coal px-8 py-4 text-sm font-bold uppercase tracking-[0.4em] text-white shadow-[0_18px_45px_rgba(9,41,39,0.45)] transition hover:scale-[1.03]"
-          >
-            Start Checkout
-          </Link>
-        </div>
-      </section>
-
-      <footer id="help" className="border-t border-white/10 bg-coal py-12 text-white">
+      <footer id="help" className="border-t border-bottle/10 bg-white/80 py-12 text-bottle">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-white/50">Need a human?</p>
-            <p className="mt-2 text-lg font-extrabold">hello@flexmobile.com</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-bottle/50">Need a human?</p>
+            <p className="mt-2 text-lg font-semibold">hello@flexmobile.com</p>
           </div>
-          <div className="flex flex-wrap gap-3 text-sm font-semibold uppercase tracking-[0.3em] text-white/60">
-            <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2">Best Network Guarantee</span>
-            <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2">Hotspot &amp; Tethering</span>
-            <span className="rounded-full border border-white/20 bg-white/5 px-4 py-2">Secure Payments</span>
+          <div className="flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.28em] text-bottle/50">
+            <span className="rounded-full border border-bottle/10 bg-white px-4 py-2">Best network guarantee</span>
+            <span className="rounded-full border border-bottle/10 bg-white px-4 py-2">Hotspot &amp; tethering</span>
+            <span className="rounded-full border border-bottle/10 bg-white px-4 py-2">Secure payments</span>
           </div>
         </div>
       </footer>
