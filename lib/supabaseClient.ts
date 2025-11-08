@@ -5,12 +5,17 @@ const supabaseUrl =
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
-export function createBrowserSupabaseClient() {
+export function createBrowserSupabaseClient(): SupabaseClient | null {
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase browser credentials are not configured.");
+    return null;
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey);
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  } catch (error) {
+    console.error("Failed to create Supabase browser client", error);
+    return null;
+  }
 }
 
 export function getSupabaseAdmin(): SupabaseClient | null {
@@ -18,10 +23,15 @@ export function getSupabaseAdmin(): SupabaseClient | null {
     return null;
   }
 
-  return createClient(supabaseUrl, supabaseServiceRole, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  try {
+    return createClient(supabaseUrl, supabaseServiceRole, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to create Supabase admin client", error);
+    return null;
+  }
 }

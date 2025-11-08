@@ -1,7 +1,19 @@
 import Stripe from "stripe";
 
-const apiVersion: Stripe.LatestApiVersion = "2024-10-28.acacia";
+const apiVersion: Stripe.LatestApiVersion = "2025-10-29.clover";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion,
-});
+let stripeClient: Stripe | null = null;
+
+export function getStripeClient() {
+  if (stripeClient) {
+    return stripeClient;
+  }
+
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured.");
+  }
+
+  stripeClient = new Stripe(secretKey, { apiVersion });
+  return stripeClient;
+}

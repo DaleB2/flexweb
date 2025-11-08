@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
+import type { NormalizedPlan } from "@/lib/esim";
 import CountrySelector from "./CountrySelector";
 import PlanSlider, { formatCurrency } from "./PlanSlider";
-import type { NormalizedPlan } from "@/lib/esim";
 
 interface CatalogResponse {
   countries?: string[];
   plans?: NormalizedPlan[];
-  markup_pct: number;
-  currency: string;
+  markup_pct?: number;
+  markupPct?: number;
+  currency?: string;
 }
 
 const featureBadges = [
@@ -34,18 +36,20 @@ export default function PlanCard() {
 
   useEffect(() => {
     let cancelled = false;
+
     const fetchCountries = async () => {
       try {
         const response = await fetch("/api/catalog", { cache: "no-store" });
         const json: CatalogResponse = await response.json();
-        if (!cancelled) {
-          setCountries(json.countries ?? []);
-          if (typeof json.markup_pct === "number") {
-            setMarkupPct(json.markup_pct);
-          }
-          if (json.currency) {
-            setCurrency(json.currency);
-          }
+        if (cancelled) return;
+
+        setCountries(json.countries ?? []);
+        const markupFromResponse = json.markup_pct ?? json.markupPct;
+        if (typeof markupFromResponse === "number") {
+          setMarkupPct(markupFromResponse);
+        }
+        if (json.currency) {
+          setCurrency(json.currency);
         }
       } catch (err) {
         console.error("Failed to load countries", err);
@@ -54,6 +58,7 @@ export default function PlanCard() {
         }
       }
     };
+
     void fetchCountries();
     return () => {
       cancelled = true;
@@ -73,14 +78,21 @@ export default function PlanCard() {
         const response = await fetch(`/api/catalog?countryCode=${countryCode}`, { cache: "no-store" });
         const json: CatalogResponse = await response.json();
         if (aborted) return;
+
         setPlans(json.plans ?? []);
         setSelectedIndex(0);
-        if (typeof json.markup_pct === "number") setMarkupPct(json.markup_pct);
-        if (json.currency) setCurrency(json.currency);
+        const markupFromResponse = json.markup_pct ?? json.markupPct;
+        if (typeof markupFromResponse === "number") {
+          setMarkupPct(markupFromResponse);
+        }
+        if (json.currency) {
+          setCurrency(json.currency);
+        }
       } catch (err) {
         console.error("Failed to load plans", err);
-        if (aborted) return;
-        setError("We couldn’t load plans for this country. Try another destination.");
+        if (!aborted) {
+          setError("We couldn’t load plans for this country. Try another destination.");
+        }
       } finally {
         if (!aborted) {
           setIsLoadingPlans(false);
@@ -99,7 +111,11 @@ export default function PlanCard() {
 
   const countryName = useMemo(() => {
     if (!countryCode) return "";
-    return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode) ?? countryCode;
+    try {
+      return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode) ?? countryCode;
+    } catch {
+      return countryCode;
+    }
   }, [countryCode]);
 
   const handleContinue = useCallback(() => {
@@ -120,6 +136,8 @@ export default function PlanCard() {
     router.push(`/checkout?${params.toString()}`);
   }, [activePlan, countryCode, countryName, currency, markupPct, router]);
 
+  const buttonDisabled = !activePlan || isLoadingPlans;
+
   return (
     <div className="flex flex-col gap-7 rounded-[32px] border border-white/40 bg-white/90 p-7 text-coal shadow-[0_35px_80px_rgba(9,41,39,0.35)] backdrop-blur lg:p-9">
       <div className="flex items-center justify-between">
@@ -139,20 +157,6 @@ export default function PlanCard() {
             mode === "unlimited"
               ? "bg-coal text-white shadow-[0_16px_40px_rgba(6,8,8,0.25)]"
               : "hover:text-coal"
-    <div className="flex flex-col gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Destination</p>
-          <h2 className="text-2xl font-semibold text-slate-900 lg:text-3xl">Pick where you&apos;re heading</h2>
-        </div>
-        <span className="hidden text-xs font-medium text-slate-500 sm:inline">Powered by eSIM Access</span>
-      </div>
-
-      <div className="flex gap-2 rounded-full bg-slate-100 p-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-        <button
-          type="button"
-          className={`flex-1 rounded-full px-4 py-2 transition ${
-            mode === "unlimited" ? "bg-white text-slate-900 shadow" : "hover:text-slate-700"
           }`}
           onClick={() => setMode("unlimited")}
         >
@@ -162,8 +166,8 @@ export default function PlanCard() {
           type="button"
           className={`flex-1 rounded-full px-4 py-2 transition ${
             mode === "metered" ? "bg-coal text-white" : "opacity-40"
-            mode === "metered" ? "bg-white text-slate-900" : "opacity-50"
           }`}
+          onClick={() => setMode("metered")}
           disabled
         >
           Pay per GB
@@ -178,7 +182,6 @@ export default function PlanCard() {
             key={badge}
             className="rounded-2xl border border-coal/10 bg-coal/5 px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-coal"
           >
-          <div key={badge} className="rounded-xl border border-slate-200 px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-600">
             {badge}
           </div>
         ))}
@@ -187,8 +190,8 @@ export default function PlanCard() {
       <div>
         {isLoadingPlans ? (
           <div className="space-y-4">
-            <div className="h-5 animate-pulse rounded-lg bg-slate-100" />
-            <div className="h-24 animate-pulse rounded-2xl bg-slate-100" />
+            <div className="h-5 animate-pulse rounded-lg bg-coal/10" />
+            <div className="h-24 animate-pulse rounded-2xl bg-coal/10" />
           </div>
         ) : error ? (
           <div className="rounded-2xl border border-persian/30 bg-persian/5 p-4 text-sm font-semibold text-persian">{error}</div>
@@ -202,8 +205,7 @@ export default function PlanCard() {
           />
         ) : (
           <div className="rounded-2xl border border-coal/10 bg-coal/5 p-6 text-center text-sm font-semibold text-coal/70">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
-            Select a destination to see available plans.
+            Select a destination to view plans.
           </div>
         )}
       </div>
@@ -211,28 +213,15 @@ export default function PlanCard() {
       <button
         type="button"
         onClick={handleContinue}
-        disabled={!activePlan || !countryCode || isLoadingPlans}
-        className="flex w-full items-center justify-between rounded-2xl bg-coal px-6 py-5 text-white shadow-[0_20px_45px_rgba(6,8,8,0.3)] transition hover:scale-[1.01] hover:bg-coal/90 disabled:cursor-not-allowed disabled:scale-100 disabled:bg-coal/40"
+        disabled={buttonDisabled}
+        className="w-full rounded-full bg-coal px-6 py-4 text-sm font-bold uppercase tracking-[0.4em] text-white shadow-[0_18px_55px_rgba(6,8,8,0.35)] transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <div className="text-left">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.35em] text-white/60">Continue</p>
-          <p className="text-xl font-extrabold">
-            {activePlan ? formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency) : "Pick a plan"}
-          </p>
-        </div>
-        <div className="text-right text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-white/50">
-        className="flex w-full items-center justify-between rounded-2xl bg-bottle px-6 py-4 text-white transition hover:bg-bottle/90 disabled:cursor-not-allowed disabled:bg-bottle/50"
-      >
-        <div className="text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">Continue</p>
-          <p className="text-lg font-semibold">
-            {activePlan ? formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency) : "Pick a plan"}
-          </p>
-        </div>
-        <div className="text-right text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
-          {countryCode ? countryName : "Destination"}
-        </div>
+        {activePlan ? `Continue — ${formatCurrency(Math.ceil(activePlan.priceCents * (1 + markupPct / 100)), currency)}` : "Pick a destination"}
       </button>
+
+      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-coal/40">
+        Taxes included. Secure checkout via Stripe.
+      </p>
     </div>
   );
 }
