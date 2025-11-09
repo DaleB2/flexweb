@@ -27,7 +27,8 @@ export interface NormalizedPlan {
   slug: string;
   packageCode: string;
   dataGb: number;
-  priceCents: number;
+  wholesalePriceCents: number;
+  retailPriceCents: number;
   periodDays: number;
   currency: string;
 }
@@ -94,23 +95,26 @@ function normalizePlans(rawPlans: unknown[], defaultCurrency: string): Normalize
       const packageCode = (record.packageCode ?? record.code ?? "").toString();
       const currency = (record.currency ?? record.currencyCode ?? defaultCurrency).toString().toUpperCase();
 
+      const wholesalePriceCents = priceCents;
+
       return {
         slug: slug || packageCode,
         packageCode,
         dataGb,
-        priceCents,
+        wholesalePriceCents,
+        retailPriceCents: wholesalePriceCents,
         periodDays,
         currency,
       } satisfies NormalizedPlan;
     })
-    .filter((plan) => plan.packageCode && plan.dataGb > 0 && plan.priceCents > 0);
+    .filter((plan) => plan.packageCode && plan.dataGb > 0 && plan.wholesalePriceCents > 0);
 
   const deduped = new Map<string, NormalizedPlan>();
 
   for (const plan of candidates) {
     const key = `${Math.round(plan.dataGb * 100)}-${plan.periodDays}-${plan.currency}`;
     const existing = deduped.get(key);
-    if (!existing || plan.priceCents < existing.priceCents) {
+    if (!existing || plan.wholesalePriceCents < existing.wholesalePriceCents) {
       deduped.set(key, plan);
     }
   }
@@ -122,7 +126,7 @@ function normalizePlans(rawPlans: unknown[], defaultCurrency: string): Normalize
     if (a.periodDays !== b.periodDays) {
       return a.periodDays - b.periodDays;
     }
-    return a.priceCents - b.priceCents;
+    return a.wholesalePriceCents - b.wholesalePriceCents;
   });
 }
 
@@ -206,10 +210,16 @@ export async function listPlansByLocation(locationCode: string) {
   }
 
   const catalogCurrency = plans.find((plan) => plan.currency)?.currency ?? DEFAULT_CURRENCY;
+  const markupMultiplier = 1 + DEFAULT_MARKUP / 100;
+
+  const pricedPlans = plans.map((plan) => ({
+    ...plan,
+    retailPriceCents: Math.max(Math.round(plan.wholesalePriceCents * markupMultiplier), plan.wholesalePriceCents),
+  }));
 
   return {
     countryCode: trimmed,
-    plans,
+    plans: pricedPlans,
     markupPct: DEFAULT_MARKUP,
     markup_pct: DEFAULT_MARKUP,
     currency: catalogCurrency,

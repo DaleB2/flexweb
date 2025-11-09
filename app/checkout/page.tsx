@@ -9,6 +9,8 @@ import type { Session } from "@supabase/supabase-js";
 
 import { createBrowserSupabaseClient } from "@/lib/supabaseClient";
 
+import styles from "./page.module.css";
+
 export const dynamic = "force-dynamic";
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
@@ -85,41 +87,43 @@ function CheckoutSummary({ draft }: { draft: Draft }) {
       : "";
 
   return (
-    <aside className="space-y-7 rounded-[32px] border border-white/20 bg-white/10 p-7 text-white shadow-[0_25px_70px_rgba(0,0,0,0.35)] backdrop-blur">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl" aria-hidden>
+    <aside className={styles.summaryCard}>
+      <div className={styles.destinationRow}>
+        <div className={styles.destinationMeta}>
+          <span className={styles.flag} aria-hidden>
             {flag}
           </span>
-          <div>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.35em] text-white/60">Destination</p>
-            <p className="text-2xl font-extrabold">{draft.country ?? draft.countryCode}</p>
+          <div className={styles.destinationCopy}>
+            <span className={styles.label}>Destination</span>
+            <strong>{draft.country ?? draft.countryCode}</strong>
           </div>
         </div>
-        <Link href="/" className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60 transition hover:text-white">
+        <Link href="/" className={styles.buttonSecondary}>
           Change
         </Link>
       </div>
-      <div className="rounded-2xl border border-white/20 bg-white/10 p-5">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">Plan</p>
-        <p className="mt-2 text-xl font-extrabold text-white">
+      <div className={styles.planCard}>
+        <span className={styles.label}>Plan</span>
+        <strong>
           {draft.dataGb} GB • {draft.periodDays} days
-        </p>
-        <p className="mt-1 text-sm font-semibold text-white/70">Unlimited data</p>
+        </strong>
+        <span className={styles.helperText}>Unlimited data</span>
       </div>
-      <div className="rounded-3xl bg-mint/95 px-6 py-7 text-coal shadow-[0_20px_60px_rgba(47,239,204,0.4)]">
-        <div className="flex items-center justify-between">
-          <span className="text-[0.65rem] font-bold uppercase tracking-[0.35em] text-coal/60">Total</span>
-          <span className="text-4xl font-black">{total}</span>
+      <div className={styles.totalCard}>
+        <div className={styles.totalRow}>
+          <span className={styles.label} style={{ color: "rgba(255,255,255,0.7)" }}>
+            Total
+          </span>
+          <span className={styles.totalValue}>{total}</span>
         </div>
-        <p className="mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.4em] text-coal/70">
+        <span className={styles.helperText} style={{ color: "rgba(255,255,255,0.78)" }}>
           Starts from {perDay} / day
-        </p>
+        </span>
       </div>
-      <ul className="space-y-2 text-sm font-semibold text-white/70">
+      <ul className={styles.benefits}>
         <li>• Instant delivery after payment</li>
         <li>• Works on unlocked eSIM-ready devices</li>
-        <li>• Keep your WhatsApp number active</li>
+        <li>• Keep your messaging apps active</li>
       </ul>
     </aside>
   );
@@ -156,13 +160,13 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-white/20 bg-white/10 p-6 text-white backdrop-blur">
+    <form onSubmit={handleSubmit} className={styles.loginForm}>
       <div>
-        <h3 className="text-xl font-extrabold">Welcome back</h3>
-        <p className="text-sm font-semibold text-white/70">Log in to continue checkout for {email}.</p>
+        <h3>Welcome back</h3>
+        <p className={styles.helperText}>Log in to continue checkout for {email}.</p>
       </div>
       <div>
-        <label htmlFor="password" className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">
+        <label htmlFor="password" className={styles.label}>
           Password
         </label>
         <input
@@ -171,15 +175,11 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-2 w-full rounded-xl border border-white/30 bg-white/80 px-4 py-3 text-sm font-semibold text-coal placeholder:text-coal/40 focus:border-mint focus:outline-none"
+          className={styles.input}
         />
       </div>
-      {error && <p className="text-sm font-semibold text-daisy">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-full bg-mint px-5 py-3 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_16px_45px_rgba(47,239,204,0.5)] transition hover:scale-[1.02] disabled:opacity-40"
-      >
+      {error && <p className={styles.errorText}>{error}</p>}
+      <button type="submit" disabled={loading} className={styles.buttonPrimary}>
         {loading ? "Signing in…" : "Log in"}
       </button>
     </form>
@@ -203,198 +203,198 @@ function PaymentStep({ draft, email }: { draft: Draft; email: string }) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/thank-you`,
+        return_url: `${window.location.origin}/thank-you?country=${draft.country ?? draft.countryCode}`,
+        receipt_email: email,
       },
+      redirect: "if_required",
     });
 
     if (error) {
-      setError(error.message ?? "Payment failed");
+      setError(error.message ?? "Payment failed. Try another method.");
       setLoading(false);
-    } else {
-      router.push("/thank-you");
+      return;
     }
+
+    router.push(`/thank-you?country=${draft.country ?? draft.countryCode}`);
   };
 
-  const formatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: draft.currency,
-    minimumFractionDigits: 0,
-  });
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="rounded-3xl border border-white/20 bg-white/10 p-6 text-white/80 backdrop-blur">
-        <p className="mb-4 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">Pay with card or wallet</p>
-        <PaymentElement options={{ layout: "tabs" }} />
-      </div>
-      {error && <div className="rounded-xl border border-daisy/40 bg-daisy/20 px-4 py-3 text-sm font-semibold text-coal">{error}</div>}
-      <button
-        type="submit"
-        disabled={!stripe || !elements || loading}
-        className="w-full rounded-full bg-mint px-6 py-4 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.45)] transition hover:scale-[1.02] disabled:opacity-40"
-      >
-        {loading ? "Processing…" : `Pay ${formatter.format(draft.totalCents / 100)}`}
+    <form onSubmit={handleSubmit} className={styles.paymentForm}>
+      <PaymentElement options={{ layout: "tabs" }} />
+      {error && <p className={styles.errorText}>{error}</p>}
+      <button type="submit" disabled={loading || !stripe || !elements} className={styles.buttonPrimary}>
+        {loading ? "Processing…" : "Complete purchase"}
       </button>
-      <p className="text-xs font-semibold text-white/60">
-        By paying you agree to receive your eSIM via email for {email}. We’ll activate it instantly when you land.
-      </p>
+      <p className={styles.secureFooter}>Secure checkout with Stripe</p>
     </form>
   );
 }
 
-function CheckoutPageContent() {
-  const searchParams = useSearchParams();
-  const parsedDraft = useMemo(() => parseDraft(searchParams), [searchParams]);
-  const [checkoutDraft, setCheckoutDraft] = useState<Draft | null>(parsedDraft);
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
+function CheckoutContent({ email }: { email: string }) {
+  const params = useSearchParams();
+  const [draft, setDraft] = useState<Draft | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [requiresLogin, setRequiresLogin] = useState(false);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+
+  const serializedParams = params.toString();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    setCheckoutDraft(parsedDraft);
-  }, [parsedDraft]);
+    const currentParams = new URLSearchParams(serializedParams);
+    const parsed = parseDraft(currentParams);
+    if (!parsed) {
+      setError("Your checkout session expired. Start again from the plans page.");
+      setLoading(false);
+      return;
+    }
 
-  if (!parsedDraft || !checkoutDraft) {
+    const startCheckout = async () => {
+      try {
+        const response = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            draft: parsed,
+            email,
+          }),
+        });
+        const json: CheckoutResponse & { error?: string } = await response.json();
+        if (!response.ok) {
+          throw new Error(json.error ?? "Checkout failed. Please refresh and try again.");
+        }
+        setDraft(json.draft ?? parsed);
+        setClientSecret(json.clientSecret ?? null);
+        setRequiresLogin(Boolean(json.requiresLogin));
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Checkout failed. Please refresh and try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void startCheckout();
+  }, [serializedParams, email, refreshKey]);
+
+  if (loading) {
+    return <div className={styles.loadingCard}>Setting up your secure checkout…</div>;
+  }
+
+  if (error || !draft) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet via-coal to-royal p-6 text-white">
-        <div className="max-w-md rounded-3xl border border-white/20 bg-white/10 p-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.4)] backdrop-blur">
-          <p className="text-2xl font-extrabold">We couldn’t find your selection.</p>
-          <p className="mt-3 text-sm font-semibold text-white/70">Start again from the homepage to pick a plan.</p>
-          <Link
-            href="/"
-            className="mt-6 inline-flex rounded-full bg-mint px-6 py-3 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.45)] transition hover:scale-[1.03]"
-          >
-            Back home
-          </Link>
-        </div>
-      </main>
+      <div className={styles.errorCard}>
+        <p>{error ?? "Unable to start checkout."}</p>
+        <Link href="/" className={styles.buttonSecondary}>
+          Return home
+        </Link>
+      </div>
     );
   }
 
-  const handleCreateIntent = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-    setLoading(true);
+  if (requiresLogin) {
+    return (
+      <LoginPanel
+        email={email}
+        onAuthenticated={() => {
+          setRequiresLogin(false);
+          setLoading(true);
+          setError(null);
+          setClientSecret(null);
+          setRefreshKey((key) => key + 1);
+        }}
+      />
+    );
+  }
 
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
-        },
-        body: JSON.stringify({ email, draft: checkoutDraft }),
-      });
-
-      if (response.status === 409 || response.status === 403) {
-        setRequiresLogin(true);
-        return;
-      }
-
-      if (!response.ok) {
-        const json = await response.json().catch(() => ({}));
-        throw new Error(json.error ?? "Failed to start checkout");
-      }
-
-      const json: CheckoutResponse = await response.json();
-      setClientSecret(json.clientSecret ?? null);
-      setRequiresLogin(Boolean(json.requiresLogin));
-      if (json.draft) {
-        setCheckoutDraft(json.draft);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAuthenticated = (session: Session) => {
-    setSessionToken(session.access_token);
-    setRequiresLogin(false);
-  };
+  if (!clientSecret || !stripePromise) {
+    return <div className={styles.errorCard}>Checkout isn’t available right now. Please try again later.</div>;
+  }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-violet via-coal to-royal px-4 py-20 text-white sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-[-10%] top-20 h-[420px] w-[420px] rounded-full bg-heliotrope/40 blur-[160px]" />
-        <div className="absolute right-[-15%] top-40 h-[520px] w-[520px] rounded-full bg-mint/40 blur-[180px]" />
-        <div className="absolute inset-x-0 bottom-[-30%] h-[420px] bg-gradient-to-t from-coal via-transparent to-transparent" />
-      </div>
-      <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1.05fr_1fr]">
-        <CheckoutSummary draft={checkoutDraft} />
-
-        <section className="space-y-7 rounded-[32px] border border-white/20 bg-white/10 p-7 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur">
-          <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">Checkout</p>
-            <h2 className="mt-3 text-3xl font-extrabold text-white">Secure payment</h2>
-            <p className="mt-2 text-sm font-semibold text-white/70">
-              Your plan total is {new Intl.NumberFormat("en-US", { style: "currency", currency: checkoutDraft.currency, minimumFractionDigits: 0 }).format(checkoutDraft.totalCents / 100)}. Enter your email to continue.
-            </p>
-          </div>
-
-          {!clientSecret && (
-            <form onSubmit={handleCreateIntent} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-white/60">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="mt-2 w-full rounded-xl border border-white/30 bg-white/85 px-4 py-3 text-sm font-semibold text-coal placeholder:text-coal/40 focus:border-mint focus:outline-none"
-                />
-              </div>
-              {error && <div className="rounded-xl border border-daisy/40 bg-daisy/20 px-4 py-3 text-sm font-semibold text-coal">{error}</div>}
-              <button
-                type="submit"
-                disabled={loading || !email}
-                className="w-full rounded-full bg-mint px-6 py-4 text-sm font-bold uppercase tracking-[0.4em] text-coal shadow-[0_18px_50px_rgba(47,239,204,0.45)] transition hover:scale-[1.02] disabled:opacity-40"
-              >
-                {loading ? "Checking…" : "Continue"}
-              </button>
-            </form>
-          )}
-
-          {requiresLogin && !clientSecret && email && (
-            <LoginPanel email={email} onAuthenticated={handleAuthenticated} />
-          )}
-
-          {clientSecret && stripePromise && (
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentStep draft={checkoutDraft} email={email} />
-            </Elements>
-          )}
-
-          {clientSecret && !stripePromise && (
-            <div className="rounded-xl border border-persian/30 bg-persian/5 px-4 py-3 text-sm font-semibold text-persian">
-              Stripe publishable key is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to continue.
-            </div>
-          )}
-        </section>
-      </div>
-    </div>
+    <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "flat" } }}>
+      <PaymentStep draft={draft} email={email} />
+    </Elements>
   );
 }
 
+function SummaryPanel() {
+  const params = useSearchParams();
+  const draft = parseDraft(new URLSearchParams(params.toString()));
+
+  if (!draft) {
+    return <div className={styles.noticeCard}>Select a plan to view your summary.</div>;
+  }
+
+  return <CheckoutSummary draft={draft} />;
+}
+
 export default function CheckoutPage() {
+  const [email, setEmail] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return new URLSearchParams(window.location.search).get("email") ?? "";
+  });
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet via-coal to-royal p-6 text-white">
-          <div className="max-w-md rounded-3xl border border-white/20 bg-white/10 p-10 text-center shadow-[0_30px_80px_rgba(0,0,0,0.4)] backdrop-blur">
-            <p className="text-lg font-semibold text-white/70">Loading checkout…</p>
-          </div>
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <Link href="/" className={styles.brand}>
+            <span className={styles.brandBadge}>FM</span>
+            <span className={styles.brandCopy}>
+              <span className={styles.brandLabel}>Flex Mobile</span>
+              <span className={styles.brandTitle}>Secure checkout</span>
+            </span>
+          </Link>
+          <span className={styles.secureTag}>Secure checkout</span>
         </div>
-      }
-    >
-      <CheckoutPageContent />
-    </Suspense>
+      </header>
+
+      <main className={styles.main}>
+        <div className={styles.panel}>
+          <h1>Quick checkout</h1>
+          <p>Enter your email to get started. We’ll send plan details and your QR instantly after payment.</p>
+          <div>
+            <label htmlFor="email" className={styles.label}>
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              className={styles.input}
+              onChange={(event) => {
+                const value = event.target.value;
+                setEmail(value);
+                if (typeof window !== "undefined") {
+                  const params = new URLSearchParams(window.location.search);
+                  if (value) {
+                    params.set("email", value);
+                  } else {
+                    params.delete("email");
+                  }
+                  const query = params.toString();
+                  const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+                  window.history.replaceState(null, "", next);
+                }
+              }}
+            />
+          </div>
+          <Suspense fallback={<div className={styles.loadingCard}>Preparing payment…</div>}>
+            <CheckoutContent email={email} />
+          </Suspense>
+        </div>
+
+        <div>
+          <Suspense fallback={<div className={styles.loadingCard}>Loading summary…</div>}>
+            <SummaryPanel />
+          </Suspense>
+        </div>
+      </main>
+    </div>
   );
 }

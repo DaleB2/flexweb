@@ -2,222 +2,167 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Header from "@/components/Header";
-import PlanCard from "@/components/PlanCard";
+import PlanSearch from "@/components/PlanSearch";
 
-const promoHighlights = [
-  { icon: "🌍", label: "200+ countries" },
-  { icon: "⚡️", label: "Instant QR delivery" },
-  { icon: "🧳", label: "Pause anytime" },
+import styles from "./page.module.css";
+
+const highlightStats = [
+  { label: "Destinations", value: "200+" },
+  { label: "Activation", value: "Instant" },
+  { label: "Devices", value: "Phones & tablets" },
 ];
 
-const citySpotlights = [
+const featureCards = [
   {
-    code: "PT",
-    name: "Lisbon",
-    copy: "Easy roaming for long sunny workations.",
-    image: "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=1200&q=80",
+    title: "Instant QR activation",
+    description: "Checkout in under a minute and scan the QR code to bring your Flex line online immediately.",
   },
   {
-    code: "JP",
-    name: "Tokyo",
-    copy: "Stream, share, and explore without limits.",
-    image: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80",
+    title: "One profile, 200+ countries",
+    description: "Stay connected worldwide without swapping SIMs or juggling multiple accounts.",
   },
   {
-    code: "MX",
-    name: "Mexico City",
-    copy: "Weekend escape to remote work base in one tap.",
-    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80",
+    title: "Transparent pricing",
+    description: "Wholesale plus a small Flex service margin—taxes and support baked into the price you see.",
+  },
+  {
+    title: "Works on every device",
+    description: "Phones, tablets, hotspots—if it supports eSIM, Flex connects it with high-speed data.",
   },
 ];
 
-const reasons = [
-  {
-    title: "No guesswork",
-    description: "Pick a destination and we surface the most popular unlimited plans—already translated into your currency.",
-  },
-  {
-    title: "Keep things light",
-    description: "One QR code covers phones, tablets, and hotspots so you can roam without juggling plastic SIMs.",
-  },
-  {
-    title: "Culture brief included",
-    description: "Every checkout ships a quick guide with greetings, tipping vibes, and power plug tips for the city you land in.",
-  },
+const destinationShowcase = [
+  "Austria",
+  "United States",
+  "United Kingdom",
+  "Japan",
+  "Turkey",
+  "Thailand",
+  "Portugal",
+  "Spain",
 ];
 
 const faqs = [
   {
-    question: "Do I need an account first?",
-    answer: "Nope. We’ll prompt you to sign in with Supabase Auth only if you’ve used the same email before.",
+    question: "How does Flex compare to Roamless?",
+    answer:
+      "We match the transparent pricing and onboarding experience you love while adding our own perks like local support and curated plan recommendations.",
   },
   {
-    question: "Can I hotspot for my laptop?",
-    answer: "Yes. Flex plans are hotspot friendly and work across unlocked phones, tablets, and travel routers.",
+    question: "Can I keep my current number?",
+    answer: "Yes. Your regular line stays active for calls and texts while Flex handles all the data for your trip.",
   },
   {
-    question: "How fast is activation?",
-    answer: "The QR and instructions arrive instantly. Most travellers are online in under a minute once they scan.",
+    question: "Do plans expire?",
+    answer: "Choose the duration that fits your stay. Once the timer runs out you can search again and top up instantly—no need for a new profile.",
+  },
+  {
+    question: "Is hotspotting supported?",
+    answer: "Absolutely. Share data with laptops, tablets, and travel companions without throttling or surprise fees.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className={styles.page}>
       <Header />
-
-      <main className="pb-24 pt-28">
-        <section className="mx-auto flex max-w-6xl flex-col gap-12 px-4 sm:px-6 lg:flex-row lg:items-center lg:px-8">
-          <div className="flex-1 space-y-6">
-            <div className="inline-flex items-center gap-3 rounded-full bg-nurse px-5 py-2 text-sm font-semibold">
-              <span className="text-coal">Flex Mobile</span>
-              <span className="text-slate-500">Cultural roaming for rebels</span>
-            </div>
-            <h1 className="text-4xl font-semibold leading-tight sm:text-[3.1rem]">
-              Travel like you already know the city.
-            </h1>
-            <p className="max-w-xl text-lg text-slate-600">
-              Flex keeps your phone online in 200+ places with a single global eSIM. Simple pricing, instant delivery, and a
-              cheeky culture brief in every order.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/destinations"
-                className="inline-flex items-center gap-2 rounded-full bg-coal px-6 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white shadow-card transition hover:bg-coal/90"
-              >
-                Browse destinations
-              </Link>
-              <Link
-                href="#plans"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-slate-600 transition hover:border-coal hover:text-coal"
-              >
-                Build a plan
-              </Link>
-            </div>
-
-            <div className="rounded-2xl bg-daisy/70 px-6 py-4">
-              <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-coal">
-                <span className="rounded-full bg-white/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-coal">
-                  New: more countries, same price
-                </span>
-                <p className="text-sm text-coal/80">
-                  We just unlocked more coverage across South America and Asia—tap a destination to see the fresh unlimited picks.
-                </p>
+      <main className={styles.main}>
+        <section className={styles.hero}>
+          <div className={styles.heroInner}>
+            <div className={styles.heroCopy}>
+              <span className={styles.heroBadge}>Flex Mobile</span>
+              <h1 className={styles.heroTitle}>The Roamless-inspired eSIM built for every trip.</h1>
+              <p className={styles.heroParagraph}>
+                Forget airport kiosks. Search any destination, lock in fair pricing, and activate in minutes. Flex mirrors the
+                Roamless experience with our own concierge support.
+              </p>
+              <div className={styles.heroActions}>
+                <Link href="#plans" className={styles.primaryButton}>
+                  Browse plans
+                </Link>
+                <Link href="#destinations" className={styles.secondaryButton}>
+                  Explore destinations
+                </Link>
               </div>
-              <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-coal/80">
-                {promoHighlights.map((item) => (
-                  <span key={item.label} className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2">
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </span>
+              <div className={styles.stats}>
+                {highlightStats.map((stat) => (
+                  <div key={stat.label} className={styles.statBlock}>
+                    <span className={styles.statValue}>{stat.value}</span>
+                    <span className={styles.statLabel}>{stat.label}</span>
+                  </div>
                 ))}
               </div>
             </div>
-          </div>
-
-          <div className="flex-1">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {citySpotlights.map((city) => (
-                <Link
-                  key={city.code}
-                  href={`/destinations/${city.code.toLowerCase()}`}
-                  className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <Image
-                    src={city.image}
-                    alt={city.name}
-                    width={600}
-                    height={500}
-                    className="h-52 w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 space-y-1 p-5 text-white">
-                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-white/70">Flex city</p>
-                    <p className="text-xl font-semibold">{city.name}</p>
-                    <p className="text-sm text-white/80">{city.copy}</p>
-                  </div>
-                </Link>
-              ))}
+            <div className={styles.heroImageFrame}>
+              <Image
+                src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=900&q=80"
+                alt="Traveler holding a phone with an eSIM app"
+                width={900}
+                height={1200}
+                className={styles.heroImage}
+                priority
+              />
             </div>
           </div>
         </section>
 
-        <section id="plans" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div className="space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full bg-coal px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.32em] text-white">
-                Unlimited data made simple
-              </span>
-              <h2 className="text-3xl font-semibold leading-snug sm:text-[2.5rem]">Pick your stopover and we’ll handle the rest.</h2>
-              <p className="text-base text-slate-600">
-                Choose a country to see a handful of tried-and-true plans. Prices are shown up front and include everything—no
-                airport upsells, no surprise add-ons.
+        <section id="plans" className={styles.planSection}>
+          <PlanSearch />
+        </section>
+
+        <section id="features" className={styles.featureSection}>
+          <div className={styles.featureHeader}>
+            <h2>Everything you expect from Roamless—plus more support.</h2>
+            <p>
+              We borrowed the premium visuals and transparent pricing flow, then layered in concierge onboarding and curated
+              plan suggestions for every traveler.
+            </p>
+          </div>
+          <div className={styles.featureGrid}>
+            {featureCards.map((feature) => (
+              <article key={feature.title} className={styles.featureCard}>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="destinations" className={styles.destinationsSection}>
+          <div className={styles.destinationsHeader}>
+            <div>
+              <h2>Popular destinations ready to activate</h2>
+              <p>
+                Flex keeps you online in 200+ countries with the same smooth checkout and profile management you’ve seen on
+                Roamless.
               </p>
-              <ul className="space-y-3 text-base text-slate-600">
-                <li>Instant QR delivery with setup instructions.</li>
-                <li>Works across phones, tablets, and hotspots.</li>
-                <li>Friendly support if you need a hand getting online.</li>
-              </ul>
             </div>
-            <PlanCard />
+            <Link href="/destinations" className={styles.linkButton}>
+              View all
+            </Link>
           </div>
-        </section>
-
-        <section id="why" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-3">
-            {reasons.map((reason) => (
-              <div key={reason.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
-                <h3 className="text-xl font-semibold">{reason.title}</h3>
-                <p className="mt-3 text-sm text-slate-600">{reason.description}</p>
+          <div className={styles.destinationsGrid}>
+            {destinationShowcase.map((destination) => (
+              <div key={destination} className={styles.destinationCard}>
+                <strong>{destination}</strong>
+                <span>Included with Flex</span>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="destinations" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-semibold">Every destination gets a spotlight page.</h2>
-              <p className="mt-2 text-base text-slate-600">
-                Dive into a country guide to see all unlimited plan options before you checkout. When you’re ready, it’s one tap to
-                lock it in.
-              </p>
-            </div>
-            <Link
-              href="/destinations"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-slate-600 transition hover:border-coal hover:text-coal"
-            >
-              See all destinations →
-            </Link>
+        <section id="faq" className={styles.faqSection}>
+          <div className={styles.faqIntro}>
+            <h2>Questions before you switch?</h2>
+            <p>We’ve redesigned Flex to mirror the Roamless experience—here’s what travelers ask us most.</p>
           </div>
-        </section>
-
-        <section id="faq" className="mx-auto mt-24 max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-card">
-            <h2 className="text-2xl font-semibold">Need a quick answer?</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-3">
-              {faqs.map((faq) => (
-                <div key={faq.question} className="space-y-2">
-                  <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">{faq.question}</p>
-                  <p className="text-sm text-slate-600">{faq.answer}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto mt-24 max-w-4xl rounded-3xl bg-coal px-8 py-12 text-white shadow-card">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.32em] text-white/60">Ready to roll?</p>
-              <h2 className="text-3xl font-semibold">Choose your next country and lock in data before take-off.</h2>
-            </div>
-            <Link
-              href="/destinations"
-              className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-coal transition hover:bg-white/90"
-            >
-              Explore destinations
-            </Link>
+          <div className={styles.faqList}>
+            {faqs.map((faq) => (
+              <article key={faq.question} className={styles.faqItem}>
+                <h3>{faq.question}</h3>
+                <p>{faq.answer}</p>
+              </article>
+            ))}
           </div>
         </section>
       </main>

@@ -120,8 +120,9 @@ export async function POST(request: NextRequest) {
     const defaultMarkup = Number(process.env.DEFAULT_MARKUP_PCT ?? 18);
     const markupFromCatalog = Number(catalog.markupPct);
     const markupPct = Number.isFinite(markupFromCatalog) && markupFromCatalog > 0 ? markupFromCatalog : defaultMarkup;
-    const wholesaleCents = plan.priceCents;
-    const totalCents = Math.max(1, Math.ceil(wholesaleCents * (1 + markupPct / 100)));
+    const wholesaleCents = plan.wholesalePriceCents;
+    const computedRetail = Math.max(1, Math.ceil(wholesaleCents * (1 + markupPct / 100)));
+    const totalCents = Math.max(plan.retailPriceCents ?? 0, computedRetail);
     const currency = (plan.currency ?? catalog.currency ?? draft.currency ?? "USD").toString().toUpperCase();
     const sanitizedDraft: CheckoutDraft = {
       countryCode: catalog.countryCode ?? draft.countryCode,
