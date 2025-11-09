@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const catalog = await listPlansByLocation(countryCode);
+
     return NextResponse.json(catalog);
   } catch (error) {
     console.error(`Failed to fetch plans for ${countryCode}`, error);
