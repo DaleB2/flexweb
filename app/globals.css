@@ -4,23 +4,22 @@
 
 :root {
   color-scheme: light;
-  --hero-glow: radial-gradient(120% 140% at 50% 0%, rgba(47, 239, 204, 0.35) 0%, rgba(21, 14, 55, 0) 60%);
 }
 
 body {
-  @apply bg-coal text-white font-display antialiased;
+  @apply font-display antialiased;
 }
 
 a {
-  @apply text-bottle underline-offset-4 transition-colors;
+  @apply text-fuchsia underline-offset-4 transition-colors;
 }
 
 a:hover {
-  @apply text-royal;
+  @apply text-amber;
 }
 
 button {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-mint;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-fuchsia/70 focus-visible:ring-offset-transparent;
 }
 
 ::-webkit-scrollbar {
@@ -29,7 +28,7 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(9, 41, 39, 0.15);
+  background: rgba(91, 43, 234, 0.3);
   border-radius: 9999px;
 }
 

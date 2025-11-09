@@ -32,12 +32,15 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
 
   if (!normalizedCode || !/^[A-Z]{2}$/.test(normalizedCode)) {
     return (
-      <div className="min-h-screen bg-white text-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white">
         <Header />
-        <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-24 pt-32 sm:px-6 lg:px-8">
+        <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-28 pt-32 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-semibold">Destination not found</h1>
-          <p className="text-base text-slate-600">Double-check the country code and try again.</p>
-          <Link href="/destinations" className="inline-flex w-fit items-center gap-2 rounded-full bg-coal px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white">
+          <p className="text-base text-white/75">Double-check the country code and try again.</p>
+          <Link
+            href="/destinations"
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-iris to-fuchsia px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white shadow-[0_22px_70px_rgba(123,60,237,0.55)]"
+          >
             Back to destinations
           </Link>
         </main>
@@ -59,27 +62,27 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
   const heroImage = heroShots[normalizedCode.charCodeAt(0) % heroShots.length];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white">
       <Header />
-      <main className="pb-24 pt-28">
-        <section className="border-b border-slate-200 bg-nurse/60">
-          <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6 lg:flex-row lg:items-center lg:px-8">
-            <div className="flex-1 space-y-5">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">
+      <main className="pb-28 pt-28">
+        <section className="border-b border-white/10 bg-white/5">
+          <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-16 sm:px-6 lg:flex-row lg:items-center lg:px-8">
+            <div className="flex-1 space-y-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-white/70">
                 Flex destination guide
               </span>
               <h1 className="text-4xl font-semibold sm:text-[3rem]">{countryName}</h1>
-              <p className="max-w-xl text-lg text-slate-600">
+              <p className="max-w-xl text-lg text-white/75">
                 Unlimited eSIM plans picked for {countryName}. Pricing is shown in full—no surprise fees when you hit checkout.
               </p>
               <Link
                 href="/destinations"
-                className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-slate-600 transition hover:border-coal hover:text-coal"
+                className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white/80 transition hover:border-white hover:text-white"
               >
                 Browse other countries →
               </Link>
             </div>
-            <div className="relative flex-1 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-card">
+            <div className="relative flex-1 overflow-hidden rounded-[36px] border border-white/10 bg-white/5 shadow-[0_25px_80px_rgba(18,7,50,0.35)]">
               <Image src={heroImage} alt={countryName} width={800} height={600} className="h-full w-full object-cover" />
             </div>
           </div>
@@ -87,7 +90,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
 
         <section className="mx-auto mt-16 max-w-6xl px-4 sm:px-6 lg:px-8">
           {loadError ? (
-            <div className="rounded-3xl border border-persian/30 bg-persian/5 p-6 text-sm text-persian">{loadError}</div>
+            <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">{loadError}</div>
           ) : catalog ? (
             <DestinationPlanShowcase
               countryCode={normalizedCode}
