@@ -9,6 +9,8 @@ import type { Session } from "@supabase/supabase-js";
 
 import { createBrowserSupabaseClient } from "@/lib/supabaseClient";
 
+import styles from "./page.module.css";
+
 export const dynamic = "force-dynamic";
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
@@ -114,12 +116,12 @@ function CheckoutSummary({ draft }: { draft: Draft }) {
         </div>
         <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-white/70">
           Starts from {perDay} / day
-        </p>
+        </span>
       </div>
       <ul className="space-y-2 text-sm font-semibold text-midnight/70">
         <li>• Instant delivery after payment</li>
         <li>• Works on unlocked eSIM-ready devices</li>
-        <li>• Keep your WhatsApp number active</li>
+        <li>• Keep your messaging apps active</li>
       </ul>
     </aside>
   );

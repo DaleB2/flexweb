@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Header from "@/components/Header";
-import PlanCard from "@/components/PlanCard";
+import PlanSearch from "@/components/PlanSearch";
 
 const highlightStats = [
   { label: "Destinations", value: "200+" },

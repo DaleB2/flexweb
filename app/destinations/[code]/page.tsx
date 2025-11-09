@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import DestinationPlans from "@/components/DestinationPlans";
 import Header from "@/components/Header";
-import DestinationPlanShowcase from "@/components/DestinationPlanShowcase";
-import { listPlansByLocation } from "@/lib/esim";
+import { listAllCountries, listPlansByLocation } from "@/lib/esim";
+
+import styles from "./page.module.css";
 
 const heroShots = [
   "https://images.unsplash.com/photo-1526481280695-3c4697a1b12b?auto=format&fit=crop&w=1600&q=80",
@@ -23,14 +25,49 @@ function getCountryName(code: string) {
   }
 }
 
+function slugify(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function resolveCountryCode(rawParam: string) {
+  const trimmed = rawParam.trim();
+  if (!trimmed) return null;
+  const directMatch = trimmed.toUpperCase();
+  if (/^[A-Z]{2}$/.test(directMatch)) {
+    return directMatch;
+  }
+
+  try {
+    const countries = await listAllCountries();
+    const display = new Intl.DisplayNames(["en"], { type: "region" });
+    const target = slugify(trimmed);
+
+    for (const code of countries) {
+      const name = display.of(code) ?? code;
+      if (slugify(name) === target) {
+        return code;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to resolve destination code", error);
+  }
+
+  return null;
+}
+
 interface DestinationPageProps {
   params: { code: string };
 }
 
 export default async function DestinationPage({ params }: DestinationPageProps) {
-  const normalizedCode = params.code?.toString().toUpperCase();
+  const param = params.code?.toString() ?? "";
+  const resolvedCode = await resolveCountryCode(param);
 
-  if (!normalizedCode || !/^[A-Z]{2}$/.test(normalizedCode)) {
+  if (!resolvedCode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white">
         <Header />
@@ -52,14 +89,14 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
   let loadError: string | null = null;
 
   try {
-    catalog = await listPlansByLocation(normalizedCode);
+    catalog = await listPlansByLocation(resolvedCode);
   } catch (error) {
-    console.error(`Failed to load plans for ${normalizedCode}`, error);
+    console.error(`Failed to load plans for ${resolvedCode}`, error);
     loadError = "We couldn’t load plans for this destination right now. Please refresh or try again soon.";
   }
 
-  const countryName = getCountryName(normalizedCode);
-  const heroImage = heroShots[normalizedCode.charCodeAt(0) % heroShots.length];
+  const countryName = getCountryName(resolvedCode);
+  const heroImage = heroShots[resolvedCode.charCodeAt(0) % heroShots.length];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white">

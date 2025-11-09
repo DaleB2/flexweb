@@ -4,6 +4,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import { listAllCountries } from "@/lib/esim";
 
+import styles from "./page.module.css";
+
 const fallbackShots = [
   "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
   "https://images.unsplash.com/photo-1470246973918-29a93221c455?auto=format&fit=crop&w=1200&q=80",
@@ -52,7 +54,8 @@ export default async function DestinationsPage() {
           <p className="mt-4 max-w-3xl text-lg text-white/80">
             Tap into curated unlimited data options for each destination. When you find the right fit, jump straight into checkout—no airport kiosks required.
           </p>
-        </section>
+        </div>
+      </section>
 
         {loadError ? (
           <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">{loadError}</div>
@@ -79,9 +82,9 @@ export default async function DestinationsPage() {
                 </div>
               </Link>
             ))}
-          </section>
-        )}
-      </main>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

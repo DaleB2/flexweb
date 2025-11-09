@@ -1,0 +1,151 @@
+.page {
+  min-height: 100vh;
+  color: var(--text-high);
+}
+
+.hero {
+  padding: 140px 0 80px;
+}
+
+.heroCard {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-card);
+  padding: 48px;
+  display: grid;
+  gap: 18px;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.34em;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.heroCard h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 3.1rem);
+  line-height: 1.1;
+}
+
+.heroCard p {
+  margin: 0;
+  color: var(--text-medium);
+  max-width: 620px;
+}
+
+.gridSection {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto 120px;
+}
+
+.gridHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.gridHeader h2 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.gridHeader p {
+  margin: 0;
+  color: var(--text-medium);
+  max-width: 520px;
+}
+
+.destinationGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 80px rgba(17, 6, 54, 0.5);
+}
+
+.cardImage {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  filter: saturate(1.1);
+}
+
+.cardBody {
+  padding: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.cardBody span {
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cardBody strong {
+  font-size: 1.2rem;
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-pill);
+  padding: 12px 26px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: var(--text-medium);
+}
+
+.linkButton:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.error {
+  width: min(720px, calc(100% - 48px));
+  margin: 0 auto 120px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(228, 72, 255, 0.35);
+  background: rgba(228, 72, 255, 0.12);
+  padding: 24px;
+  color: #ffeaff;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .heroCard {
+    padding: 32px;
+  }
+}
