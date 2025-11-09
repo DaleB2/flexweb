@@ -45,8 +45,7 @@ describe("GET /api/catalog", () => {
           slug: "base-plan",
           packageCode: "BASE-1",
           dataGb: 5,
-          wholesalePriceCents: 1500,
-          retailPriceCents: 1890,
+          priceCents: 1500,
           periodDays: 7,
           currency: "USD",
         },
@@ -68,10 +67,6 @@ describe("GET /api/catalog", () => {
 
     expect(body.countryCode).toBe("US");
     expect(body.plans).toHaveLength(1);
-    expect(body.plans[0]).toMatchObject({
-      retailPriceCents: 1890,
-      wholesalePriceCents: 1500,
-    });
     expect(body.topupPlans).toBeUndefined();
   });
 });

@@ -69,17 +69,18 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
 
   if (!resolvedCode) {
     return (
-      <div className={styles.page}>
+      <div className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white">
         <Header />
-        <div className={styles.notFound}>
-          <div className={styles.notFoundCard}>
-            <h1>Destination not found</h1>
-            <p>We couldn’t match “{param}” to any supported country. Try searching from the home page.</p>
-            <Link href="/destinations" className={styles.backLink}>
-              Back to all destinations
-            </Link>
-          </div>
-        </div>
+        <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-28 pt-32 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-semibold">Destination not found</h1>
+          <p className="text-base text-white/75">Double-check the country code and try again.</p>
+          <Link
+            href="/destinations"
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-gradient-to-r from-iris to-fuchsia px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white shadow-[0_22px_70px_rgba(123,60,237,0.55)]"
+          >
+            Back to destinations
+          </Link>
+        </main>
       </div>
     );
   }
@@ -98,42 +99,46 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
   const heroImage = heroShots[resolvedCode.charCodeAt(0) % heroShots.length];
 
   return (
-    <div className={styles.page}>
+    <div className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white">
       <Header />
-      <section className={styles.hero}>
-        <div className={styles.heroInner}>
-          <div className={styles.copy}>
-            <span className={styles.kicker}>Flex destination guide</span>
-            <h1 className={styles.title}>{countryName}</h1>
-            <p className={styles.subtitle}>
-              Unlimited eSIM plans curated for {countryName}. Pricing is shown in full—no surprise fees when you reach
-              checkout.
-            </p>
-            <Link href="/destinations" className={styles.backLink}>
-              Browse other destinations
-            </Link>
+      <main className="pb-28 pt-28">
+        <section className="border-b border-white/10 bg-white/5">
+          <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-16 sm:px-6 lg:flex-row lg:items-center lg:px-8">
+            <div className="flex-1 space-y-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-white/70">
+                Flex destination guide
+              </span>
+              <h1 className="text-4xl font-semibold sm:text-[3rem]">{countryName}</h1>
+              <p className="max-w-xl text-lg text-white/75">
+                Unlimited eSIM plans picked for {countryName}. Pricing is shown in full—no surprise fees when you hit checkout.
+              </p>
+              <Link
+                href="/destinations"
+                className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white/80 transition hover:border-white hover:text-white"
+              >
+                Browse other countries →
+              </Link>
+            </div>
+            <div className="relative flex-1 overflow-hidden rounded-[36px] border border-white/10 bg-white/5 shadow-[0_25px_80px_rgba(18,7,50,0.35)]">
+              <Image src={heroImage} alt={countryName} width={800} height={600} className="h-full w-full object-cover" />
+            </div>
           </div>
-          <div className={styles.heroImageFrame}>
-            <Image src={heroImage} alt={countryName} width={1200} height={800} className={styles.heroImage} />
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <div className={styles.mainContent}>
-        {loadError ? (
-          <div className={styles.errorCard}>{loadError}</div>
-        ) : catalog ? (
-          <DestinationPlans
-            countryCode={resolvedCode}
-            countryName={countryName}
-            plans={catalog.plans}
-            markupPct={catalog.markupPct ?? 18}
-            currency={catalog.currency ?? "USD"}
-          />
-        ) : (
-          <div className={styles.emptyState}>Loading plans for {countryName}…</div>
-        )}
-      </div>
+        <section className="mx-auto mt-16 max-w-6xl px-4 sm:px-6 lg:px-8">
+          {loadError ? (
+            <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">{loadError}</div>
+          ) : catalog ? (
+            <DestinationPlanShowcase
+              countryCode={normalizedCode}
+              countryName={countryName}
+              plans={catalog.plans}
+              markupPct={catalog.markupPct ?? 18}
+              currency={catalog.currency ?? "USD"}
+            />
+          ) : null}
+        </section>
+      </main>
     </div>
   );
 }

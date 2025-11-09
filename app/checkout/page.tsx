@@ -87,40 +87,38 @@ function CheckoutSummary({ draft }: { draft: Draft }) {
       : "";
 
   return (
-    <aside className={styles.summaryCard}>
-      <div className={styles.destinationRow}>
-        <div className={styles.destinationMeta}>
-          <span className={styles.flag} aria-hidden>
+    <aside className="space-y-6 rounded-[32px] border border-lilac/60 bg-white p-7 text-midnight shadow-[0_25px_70px_rgba(18,7,50,0.15)]">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl" aria-hidden>
             {flag}
           </span>
-          <div className={styles.destinationCopy}>
-            <span className={styles.label}>Destination</span>
-            <strong>{draft.country ?? draft.countryCode}</strong>
+          <div>
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-midnight/50">Destination</p>
+            <p className="text-2xl font-semibold">{draft.country ?? draft.countryCode}</p>
           </div>
         </div>
-        <Link href="/" className={styles.buttonSecondary}>
+        <Link href="/" className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-iris transition hover:text-fuchsia">
           Change
         </Link>
       </div>
-      <div className={styles.planCard}>
-        <span className={styles.label}>Plan</span>
-        <strong>
+      <div className="rounded-[24px] border border-lilac/40 bg-moon/70 p-5">
+        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-midnight/50">Plan</p>
+        <p className="mt-2 text-xl font-semibold text-midnight">
           {draft.dataGb} GB • {draft.periodDays} days
-        </strong>
-        <span className={styles.helperText}>Unlimited data</span>
+        </p>
+        <p className="mt-1 text-sm font-semibold text-midnight/60">Unlimited data</p>
       </div>
-      <div className={styles.totalCard}>
-        <div className={styles.totalRow}>
-          <span className={styles.label} style={{ color: "rgba(255,255,255,0.7)" }}>
-            Total
-          </span>
-          <span className={styles.totalValue}>{total}</span>
+      <div className="rounded-[28px] bg-gradient-to-r from-iris to-fuchsia px-6 py-7 text-white shadow-[0_22px_70px_rgba(123,60,237,0.5)]">
+        <div className="flex items-center justify-between">
+          <span className="text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-white/70">Total</span>
+          <span className="text-4xl font-semibold">{total}</span>
         </div>
-        <span className={styles.helperText} style={{ color: "rgba(255,255,255,0.78)" }}>
+        <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-white/70">
           Starts from {perDay} / day
         </span>
       </div>
-      <ul className={styles.benefits}>
+      <ul className="space-y-2 text-sm font-semibold text-midnight/70">
         <li>• Instant delivery after payment</li>
         <li>• Works on unlocked eSIM-ready devices</li>
         <li>• Keep your messaging apps active</li>
@@ -160,13 +158,13 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.loginForm}>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-lilac/40 bg-white p-6 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">
       <div>
-        <h3>Welcome back</h3>
-        <p className={styles.helperText}>Log in to continue checkout for {email}.</p>
+        <h3 className="text-xl font-semibold text-midnight">Welcome back</h3>
+        <p className="text-sm font-medium text-midnight/60">Log in to continue checkout for {email}.</p>
       </div>
       <div>
-        <label htmlFor="password" className={styles.label}>
+        <label htmlFor="password" className="text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-midnight/50">
           Password
         </label>
         <input
@@ -175,11 +173,15 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
           required
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className={styles.input}
+          className="mt-2 w-full rounded-2xl border border-lilac/60 bg-white px-4 py-3 text-sm font-medium text-midnight placeholder:text-midnight/40 focus:border-iris focus:outline-none focus:ring-2 focus:ring-iris/40"
         />
       </div>
-      {error && <p className={styles.errorText}>{error}</p>}
-      <button type="submit" disabled={loading} className={styles.buttonPrimary}>
+      {error && <p className="text-sm font-semibold text-fuchsia">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-full bg-gradient-to-r from-iris to-fuchsia px-5 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white shadow-[0_18px_60px_rgba(123,60,237,0.45)] transition hover:shadow-[0_22px_80px_rgba(123,60,237,0.6)] disabled:opacity-50"
+      >
         {loading ? "Signing in…" : "Log in"}
       </button>
     </form>
@@ -219,13 +221,17 @@ function PaymentStep({ draft, email }: { draft: Draft; email: string }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.paymentForm}>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-[32px] border border-lilac/50 bg-white p-6 shadow-[0_22px_80px_rgba(18,7,50,0.18)]">
       <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p className={styles.errorText}>{error}</p>}
-      <button type="submit" disabled={loading || !stripe || !elements} className={styles.buttonPrimary}>
+      {error && <p className="text-sm font-semibold text-fuchsia">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading || !stripe || !elements}
+        className="w-full rounded-full bg-gradient-to-r from-iris to-fuchsia px-6 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white shadow-[0_20px_70px_rgba(123,60,237,0.5)] transition hover:shadow-[0_24px_90px_rgba(123,60,237,0.65)] disabled:opacity-50"
+      >
         {loading ? "Processing…" : "Complete purchase"}
       </button>
-      <p className={styles.secureFooter}>Secure checkout with Stripe</p>
+      <p className="text-center text-xs font-medium uppercase tracking-[0.3em] text-midnight/40">Secure checkout with Stripe</p>
     </form>
   );
 }
@@ -279,14 +285,18 @@ function CheckoutContent({ email }: { email: string }) {
   }, [serializedParams, email, refreshKey]);
 
   if (loading) {
-    return <div className={styles.loadingCard}>Setting up your secure checkout…</div>;
+    return (
+      <div className="rounded-[32px] border border-lilac/40 bg-white p-6 text-sm text-midnight/60 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">
+        Setting up your secure checkout…
+      </div>
+    );
   }
 
   if (error || !draft) {
     return (
-      <div className={styles.errorCard}>
+      <div className="space-y-4 rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">
         <p>{error ?? "Unable to start checkout."}</p>
-        <Link href="/" className={styles.buttonSecondary}>
+        <Link href="/" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.32em] text-white">
           Return home
         </Link>
       </div>
@@ -309,7 +319,11 @@ function CheckoutContent({ email }: { email: string }) {
   }
 
   if (!clientSecret || !stripePromise) {
-    return <div className={styles.errorCard}>Checkout isn’t available right now. Please try again later.</div>;
+    return (
+      <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">
+        Checkout isn’t available right now. Please try again later.
+      </div>
+    );
   }
 
   return (
@@ -317,17 +331,6 @@ function CheckoutContent({ email }: { email: string }) {
       <PaymentStep draft={draft} email={email} />
     </Elements>
   );
-}
-
-function SummaryPanel() {
-  const params = useSearchParams();
-  const draft = parseDraft(new URLSearchParams(params.toString()));
-
-  if (!draft) {
-    return <div className={styles.noticeCard}>Select a plan to view your summary.</div>;
-  }
-
-  return <CheckoutSummary draft={draft} />;
 }
 
 export default function CheckoutPage() {
@@ -339,62 +342,83 @@ export default function CheckoutPage() {
   });
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand}>
-            <span className={styles.brandBadge}>FM</span>
-            <span className={styles.brandCopy}>
-              <span className={styles.brandLabel}>Flex Mobile</span>
-              <span className={styles.brandTitle}>Secure checkout</span>
-            </span>
+    <div className="min-h-screen bg-cloud text-midnight">
+      <header className="border-b border-lilac/40 bg-white/80">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-iris to-fuchsia text-base font-extrabold text-white shadow-[0_18px_45px_rgba(123,60,237,0.4)]">
+              FM
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-midnight/50">Flex Mobile</span>
+              <span className="text-lg font-semibold text-midnight">Secure checkout</span>
+            </div>
           </Link>
-          <span className={styles.secureTag}>Secure checkout</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.32em] text-midnight/60">Secure checkout</span>
         </div>
       </header>
-
-      <main className={styles.main}>
-        <div className={styles.panel}>
-          <h1>Quick checkout</h1>
-          <p>Enter your email to get started. We’ll send plan details and your QR instantly after payment.</p>
-          <div>
-            <label htmlFor="email" className={styles.label}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              className={styles.input}
-              onChange={(event) => {
-                const value = event.target.value;
-                setEmail(value);
-                if (typeof window !== "undefined") {
-                  const params = new URLSearchParams(window.location.search);
-                  if (value) {
-                    params.set("email", value);
-                  } else {
-                    params.delete("email");
+      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-24 pt-16 sm:px-6 lg:flex-row lg:items-start lg:gap-14 lg:px-8">
+        <div className="flex-1 space-y-6">
+          <div className="rounded-[36px] border border-lilac/40 bg-white p-8 shadow-[0_28px_90px_rgba(18,7,50,0.15)]">
+            <h1 className="text-3xl font-semibold text-midnight">Quick checkout</h1>
+            <p className="mt-2 text-base text-midnight/70">
+              Enter your email to get started. We’ll send plan details and your QR instantly after payment.
+            </p>
+            <div className="mt-6 space-y-4">
+              <label htmlFor="email" className="text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-midnight/50">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                className="w-full rounded-2xl border border-lilac/60 bg-white px-4 py-3 text-sm font-medium text-midnight placeholder:text-midnight/40 focus:border-iris focus:outline-none focus:ring-2 focus:ring-iris/40"
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setEmail(value);
+                  if (typeof window !== "undefined") {
+                    const params = new URLSearchParams(window.location.search);
+                    if (value) {
+                      params.set("email", value);
+                    } else {
+                      params.delete("email");
+                    }
+                    const query = params.toString();
+                    const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+                    window.history.replaceState(null, "", next);
                   }
-                  const query = params.toString();
-                  const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
-                  window.history.replaceState(null, "", next);
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
-          <Suspense fallback={<div className={styles.loadingCard}>Preparing payment…</div>}>
+
+          <Suspense fallback={<div className="rounded-[32px] border border-lilac/40 bg-white p-6 text-sm text-midnight/60 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">Preparing payment…</div>}>
             <CheckoutContent email={email} />
           </Suspense>
         </div>
 
-        <div>
-          <Suspense fallback={<div className={styles.loadingCard}>Loading summary…</div>}>
-            <SummaryPanel />
+        <div className="lg:w-[28rem]">
+          <Suspense fallback={<div className="rounded-[32px] border border-lilac/40 bg-white p-6 text-sm text-midnight/60 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">Loading summary…</div>}>
+            <Summary />
           </Suspense>
         </div>
       </main>
     </div>
   );
+}
+
+function Summary() {
+  const params = useSearchParams();
+  const draft = parseDraft(params);
+
+  if (!draft) {
+    return (
+      <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">
+        Select a destination and plan to start checkout.
+      </div>
+    );
+  }
+
+  return <CheckoutSummary draft={draft} />;
 }
