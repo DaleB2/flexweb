@@ -1,0 +1,349 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  padding-top: 96px;
+  color: var(--text-high);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  padding-bottom: 120px;
+}
+
+.hero {
+  position: relative;
+  padding: 80px 0;
+}
+
+.heroInner {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  display: grid;
+  gap: 48px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: center;
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.heroTitle {
+  font-size: clamp(2.6rem, 5vw, 3.4rem);
+  line-height: 1.12;
+  margin: 0;
+  font-weight: 700;
+}
+
+.heroParagraph {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text-medium);
+  max-width: 520px;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  padding: 14px 32px;
+  font-size: 0.8rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.primaryButton {
+  background: linear-gradient(120deg, var(--color-iris), var(--color-fuchsia));
+  color: #fff;
+  box-shadow: var(--shadow-button);
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 24px 80px rgba(123, 60, 237, 0.55);
+}
+
+.secondaryButton {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: var(--text-medium);
+}
+
+.secondaryButton:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.heroImageFrame {
+  position: relative;
+  border-radius: 44px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-hero);
+  padding: 18px;
+}
+
+.heroImageFrame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 55%);
+  pointer-events: none;
+}
+
+.heroImage {
+  width: 100%;
+  height: 540px;
+  object-fit: cover;
+  border-radius: 36px;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.statLabel {
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.planSection {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.featureSection {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  display: grid;
+  gap: 36px;
+}
+
+.featureHeader {
+  text-align: center;
+  display: grid;
+  gap: 14px;
+}
+
+.featureHeader h2 {
+  font-size: 2.4rem;
+  margin: 0;
+}
+
+.featureHeader p {
+  margin: 0 auto;
+  max-width: 620px;
+  color: var(--text-medium);
+}
+
+.featureGrid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.featureCard {
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+.featureCard h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.featureCard p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-medium);
+}
+
+.destinationsSection {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.destinationsHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.destinationsHeader h2 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+
+.destinationsHeader p {
+  margin: 0;
+  color: var(--text-medium);
+  max-width: 520px;
+}
+
+.destinationsGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.destinationCard {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.destinationCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 70px rgba(17, 6, 54, 0.45);
+}
+
+.destinationCard strong {
+  font-size: 1.1rem;
+}
+
+.destinationCard span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--text-muted);
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-pill);
+  padding: 12px 26px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: var(--text-medium);
+}
+
+.linkButton:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+}
+
+.faqSection {
+  width: min(900px, calc(100% - 48px));
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.faqIntro {
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+
+.faqIntro h2 {
+  margin: 0;
+  font-size: 2.3rem;
+}
+
+.faqIntro p {
+  margin: 0;
+  color: var(--text-medium);
+}
+
+.faqList {
+  display: grid;
+  gap: 16px;
+}
+
+.faqItem {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.faqItem h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.faqItem p {
+  margin: 0;
+  color: var(--text-medium);
+}
+
+@media (max-width: 720px) {
+  .main {
+    gap: 80px;
+  }
+
+  .hero {
+    padding: 60px 0 40px;
+  }
+
+  .heroImage {
+    height: 420px;
+  }
+}

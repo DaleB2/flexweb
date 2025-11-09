@@ -4,33 +4,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        mint: "#2FEFCC",         // Bright Turquoise
-        bottle: "#092927",       // Bottle Green
-        daisy: "#FDF074",        // Paris Daisy
-        heliotrope: "#E57EFB",   // Heliotrope
-        anakiwa: "#87EFFF",      // Anakiwa
-        royal: "#2954E5",        // Royal Blue
-        persian: "#5213D0",      // Persian Blue
-        violet: "#18063E",       // Violet
-        nurse: "#F3F6F3",        // Gray Nurse
-        coal: "#060808"          // Woodsmoke
+        midnight: "#13062B",
+        plum: "#2B0B59",
+        iris: "#5B2BEA",
+        fuchsia: "#FF6AD5",
+        amber: "#FFC857",
+        lilac: "#D9CEFF",
+        moon: "#F5F2FF",
+        blush: "#FF9AC0",
+        cloud: "#FDFBFF",
       },
       boxShadow: {
-        card: "0 14px 40px rgba(9,41,39,.12)"
+        card: "0 25px 70px rgba(19,6,43,0.28)",
       },
       borderRadius: {
-        xl2: "1.25rem"
+        xl2: "1.25rem",
       },
       fontFamily: {
-        pop: ['Poppins', 'system-ui', 'sans-serif'],
-        helv: ['Helvetica', 'Arial', 'sans-serif'],
-        // MD Nichrome is licensed; we’ll fall back to Poppins/Helvetica.
-        display: ['Poppins', 'Helvetica', 'Arial', 'sans-serif']
+        pop: ["Poppins", "system-ui", "sans-serif"],
+        helv: ["Helvetica", "Arial", "sans-serif"],
+        display: ["Poppins", "Helvetica", "Arial", "sans-serif"],
       },
       backgroundImage: {
-        heroGrad: "linear-gradient(180deg,#6FD4FF 0%,#CDBBFD 50%,#F7D2D7 100%)"
-      }
-    }
+        heroOrb: "radial-gradient(circle at top right, rgba(255,106,213,0.4), transparent 60%)",
+        heroDepth: "linear-gradient(135deg, rgba(91,43,234,0.65), rgba(19,6,43,0.95))",
+      },
+    },
   },
-  plugins: []
-}
+  plugins: [],
+};

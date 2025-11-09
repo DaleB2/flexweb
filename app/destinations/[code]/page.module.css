@@ -1,0 +1,147 @@
+.page {
+  min-height: 100vh;
+  color: var(--text-high);
+}
+
+.hero {
+  padding: 140px 0 80px;
+}
+
+.heroInner {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  display: grid;
+  gap: 48px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: center;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.7rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.5rem, 4vw, 3.2rem);
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 540px;
+  color: var(--text-medium);
+  font-size: 1rem;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-pill);
+  padding: 12px 26px;
+  font-size: 0.72rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: var(--text-medium);
+  width: fit-content;
+}
+
+.backLink:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.heroImageFrame {
+  border-radius: 44px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-hero);
+}
+
+.heroImage {
+  width: 100%;
+  height: 520px;
+  object-fit: cover;
+}
+
+.mainContent {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto 120px;
+  display: grid;
+  gap: 40px;
+}
+
+.errorCard {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(228, 72, 255, 0.35);
+  background: rgba(228, 72, 255, 0.12);
+  padding: 24px;
+  color: #ffeaff;
+  font-weight: 600;
+}
+
+.emptyState {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 24px;
+  color: var(--text-medium);
+  text-align: center;
+}
+
+.notFound {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 160px 24px;
+  text-align: center;
+}
+
+.notFoundCard {
+  max-width: 520px;
+  display: grid;
+  gap: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 36px;
+}
+
+.notFoundCard h1 {
+  margin: 0;
+  font-size: 2.4rem;
+}
+
+.notFoundCard p {
+  margin: 0;
+  color: var(--text-medium);
+}
+
+@media (max-width: 720px) {
+  .hero {
+    padding-top: 110px;
+  }
+
+  .heroImage {
+    height: 420px;
+  }
+}

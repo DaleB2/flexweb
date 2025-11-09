@@ -1,10 +1,10 @@
 import crypto from "crypto";
 
-const ESIM_BASE_URL = process.env.ESIM_ACCESS_BASE_URL ?? "https://api.esimaccess.com";
-const ESIM_ACCESS_CODE = process.env.ESIM_ACCESS_CODE ?? "";
-const ESIM_SECRET = process.env.ESIM_SECRET ?? "";
-const DEFAULT_CURRENCY = process.env.DEFAULT_CURRENCY ?? "USD";
-const DEFAULT_MARKUP = Number(process.env.DEFAULT_MARKUP_PCT ?? 35);
+const ESIM_BASE_URL = (process.env.ESIM_ACCESS_BASE_URL ?? "https://api.esimaccess.com").trim();
+const ESIM_ACCESS_CODE = (process.env.ESIM_ACCESS_CODE ?? "").trim();
+const ESIM_SECRET = (process.env.ESIM_SECRET ?? "").trim();
+const DEFAULT_CURRENCY = (process.env.DEFAULT_CURRENCY ?? "USD").trim();
+const DEFAULT_MARKUP = Number(process.env.DEFAULT_MARKUP_PCT ?? 18);
 
 interface EsimAccessResponse {
   success?: boolean | string | number;
@@ -27,7 +27,8 @@ export interface NormalizedPlan {
   slug: string;
   packageCode: string;
   dataGb: number;
-  priceCents: number;
+  wholesalePriceCents: number;
+  retailPriceCents: number;
   periodDays: number;
   currency: string;
 }
@@ -81,7 +82,7 @@ function parseDataGb(plan: Record<string, unknown>): number {
 }
 
 function normalizePlans(rawPlans: unknown[], defaultCurrency: string): NormalizedPlan[] {
-  return rawPlans
+  const candidates = rawPlans
     .map((plan) => (typeof plan === "object" && plan !== null ? plan : {}))
     .map((plan) => {
       const record = plan as Record<string, unknown>;
@@ -94,17 +95,39 @@ function normalizePlans(rawPlans: unknown[], defaultCurrency: string): Normalize
       const packageCode = (record.packageCode ?? record.code ?? "").toString();
       const currency = (record.currency ?? record.currencyCode ?? defaultCurrency).toString().toUpperCase();
 
+      const wholesalePriceCents = priceCents;
+
       return {
         slug: slug || packageCode,
         packageCode,
         dataGb,
-        priceCents,
+        wholesalePriceCents,
+        retailPriceCents: wholesalePriceCents,
         periodDays,
         currency,
       } satisfies NormalizedPlan;
     })
-    .filter((plan) => plan.packageCode && plan.dataGb > 0 && plan.priceCents > 0)
-    .sort((a, b) => a.dataGb - b.dataGb);
+    .filter((plan) => plan.packageCode && plan.dataGb > 0 && plan.wholesalePriceCents > 0);
+
+  const deduped = new Map<string, NormalizedPlan>();
+
+  for (const plan of candidates) {
+    const key = `${Math.round(plan.dataGb * 100)}-${plan.periodDays}-${plan.currency}`;
+    const existing = deduped.get(key);
+    if (!existing || plan.wholesalePriceCents < existing.wholesalePriceCents) {
+      deduped.set(key, plan);
+    }
+  }
+
+  return Array.from(deduped.values()).sort((a, b) => {
+    if (a.dataGb !== b.dataGb) {
+      return a.dataGb - b.dataGb;
+    }
+    if (a.periodDays !== b.periodDays) {
+      return a.periodDays - b.periodDays;
+    }
+    return a.wholesalePriceCents - b.wholesalePriceCents;
+  });
 }
 
 function parsePrice(value: unknown) {
@@ -187,10 +210,16 @@ export async function listPlansByLocation(locationCode: string) {
   }
 
   const catalogCurrency = plans.find((plan) => plan.currency)?.currency ?? DEFAULT_CURRENCY;
+  const markupMultiplier = 1 + DEFAULT_MARKUP / 100;
+
+  const pricedPlans = plans.map((plan) => ({
+    ...plan,
+    retailPriceCents: Math.max(Math.round(plan.wholesalePriceCents * markupMultiplier), plan.wholesalePriceCents),
+  }));
 
   return {
     countryCode: trimmed,
-    plans,
+    plans: pricedPlans,
     markupPct: DEFAULT_MARKUP,
     markup_pct: DEFAULT_MARKUP,
     currency: catalogCurrency,

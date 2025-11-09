@@ -10,14 +10,15 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Flex Mobile — Travel eSIM Store",
-  description: "Unlimited travel eSIM data in 190+ destinations. Inspired by Truely.",
+  title: "Flex Mobile — Reliable global eSIMs",
+  description:
+    "Stay online in 200+ destinations with instant eSIM activation, transparent pricing, and a checkout inspired by Roamless.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${poppins.variable} font-pop`}>
-      <body className="min-h-screen bg-coal text-white" suppressHydrationWarning>
+      <body className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white" suppressHydrationWarning>
         {children}
       </body>
     </html>

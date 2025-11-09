@@ -1,0 +1,144 @@
+.card {
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 40px;
+  color: #120733;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: auto -140px -140px auto;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(228, 72, 255, 0.18), transparent 70%);
+  transform: rotate(12deg);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.kicker {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.38em;
+  color: rgba(18, 7, 51, 0.55);
+  font-weight: 600;
+}
+
+.title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #120733;
+}
+
+.description {
+  margin: 0;
+  color: rgba(18, 7, 51, 0.66);
+  font-size: 0.95rem;
+  max-width: 560px;
+}
+
+.grid {
+  position: relative;
+  z-index: 1;
+  margin-top: 28px;
+  display: grid;
+  gap: 18px;
+}
+
+.plan {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(17, 6, 54, 0.12);
+  background: rgba(17, 6, 54, 0.08);
+  padding: 26px;
+  display: grid;
+  gap: 16px;
+}
+
+.planHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.planName {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.planPrice {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-iris);
+}
+
+.planMeta {
+  color: rgba(18, 7, 51, 0.58);
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.button {
+  border-radius: var(--radius-pill);
+  padding: 12px 24px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  background: linear-gradient(120deg, var(--color-iris), var(--color-fuchsia));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-button);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 70px rgba(123, 60, 237, 0.55);
+}
+
+.supportCopy {
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(18, 7, 51, 0.45);
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: 28px;
+  }
+
+  .planHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .button {
+    width: 100%;
+  }
+}
