@@ -98,8 +98,8 @@ export default function HomePage() {
               priority
               className="-z-20 object-cover"
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#042461]/95 via-[#0b3d99]/80 to-[#021131]/95" />
-            <div className="absolute inset-x-0 top-10 -z-10 h-80 bg-[radial-gradient(circle_at_top,_rgba(74,185,255,0.55),_transparent_70%)] blur-3xl" />
+            <div className="absolute inset-0 -z-10 bg-heroOverlay" />
+            <div className="absolute inset-x-0 top-10 -z-10 h-80 bg-heroHalo blur-3xl" />
           </div>
 
           <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 pb-12 sm:px-6 lg:flex-row lg:items-center lg:px-8">
