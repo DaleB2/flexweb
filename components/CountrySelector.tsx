@@ -63,6 +63,7 @@ export default function CountrySelector({ countries, selected, onSelect, helperT
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [countries]);
 
+  const helperClassName = helperTone === "dark" ? "text-white/70" : "text-truelyNavy/70";
   const helperClassName = helperTone === "dark" ? "text-white/70" : "text-[#313754]/70";
 
   return (

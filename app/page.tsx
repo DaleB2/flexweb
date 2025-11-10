@@ -3,6 +3,14 @@ import Link from "next/link";
 
 import Header from "@/components/Header";
 import PlanCard from "@/components/PlanCard";
+import { Badge } from "@/components/ui/badge";
+
+const heroBenefits = [
+  "Best network guarantee",
+  "Switchless activation",
+  "Hotspot & tethering",
+  "Visa, Apple Pay & Google Pay",
+];
 
 const highlightStats = [
   { label: "Countries", value: "200+" },
@@ -37,6 +45,11 @@ const destinationShowcase = [
   "Thailand",
   "Portugal",
   "Germany",
+  "Mexico",
+  "Turkey",
+  "Italy",
+  "France",
+  "Greece",
 ];
 
 const comparisons = [
@@ -154,6 +167,10 @@ export default function HomePage() {
                   <li>• Plan summary keeps totals front-and-center before checkout.</li>
                   <li>• Checkout cards stack email → login → payment seamlessly.</li>
                 </ul>
+              </div>
+              <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
+                <PlanCard />
+              </div>
               </div>
               <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
                 <PlanCard />

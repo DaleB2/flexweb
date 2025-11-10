@@ -63,6 +63,7 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
 
   if (!active) {
     return (
+      <Card className="border-dashed border-truelySky/30 bg-white/80 p-6 text-center text-sm text-truelyNavy/60 shadow-none">
       <Card className="border-dashed border-[#d0d5ff]/60 bg-white/80 p-6 text-center text-sm text-[#313754]/70 shadow-none">
         Select a destination to view plans.
       </Card>
@@ -84,6 +85,10 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-truelyNavy/50">Choose data</p>
+          <p className="text-sm font-semibold text-truelyNavy">Pick what matches your trip.</p>
+        </div>
+        <Badge className="bg-truelyMint/70 text-truelyNavy">{formatDataLabel(active.dataGb)} GB</Badge>
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#313754]/60">Choose data</p>
           <p className="text-sm font-semibold text-[#0b0f1c]">Pick what matches your trip.</p>
         </div>
@@ -98,6 +103,11 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
             <Button
               key={`${plan.slug}-${plan.dataGb}`}
               type="button"
+              variant="outline"
+              className={`h-auto flex-col gap-1 rounded-2xl px-4 py-3 text-xs uppercase tracking-[0.28em] ${
+                isActive
+                  ? "border-transparent bg-truelyLime text-truelyNavy shadow-[0_16px_45px_rgba(156,255,0,0.35)]"
+                  : "border-truelySky/40 bg-white text-truelyNavy/70"
               variant={isActive ? "default" : "outline"}
               className={`h-auto flex-col gap-1 rounded-2xl px-4 py-3 text-xs uppercase tracking-[0.28em] ${
                 isActive ? "from-[#74e4ff] via-[#5360ff] to-[#6f3]" : "border-[#d0d5ff]/60 text-[#313754]"
@@ -112,6 +122,8 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
       </div>
 
       {activeGroup && activeGroup.length > 0 ? (
+        <div className="space-y-3 rounded-3xl border border-truelySky/30 bg-white/80 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-truelyNavy/50">Stay length</p>
         <div className="space-y-3 rounded-3xl border border-[#d0d5ff]/60 bg-white/80 p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#313754]/60">Stay length</p>
           <div className="grid gap-3">
@@ -124,6 +136,12 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
                   onClick={() => onChange(plan.originalIndex)}
                   className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
                     isSelected
+                      ? "border-transparent bg-truelyLime text-truelyNavy shadow-[0_20px_60px_rgba(156,255,0,0.35)]"
+                      : "border-truelySky/30 bg-white text-truelyNavy hover:border-truelySky/40"
+                  }`}
+                >
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-[0.32em] ${isSelected ? "text-truelyNavy/70" : "text-truelyNavy/50"}`}>
                       ? "border-transparent bg-gradient-to-r from-[#74e4ff] via-[#5360ff] to-[#6f3] text-white shadow-[0_18px_55px_rgba(83,96,255,0.35)]"
                       : "border-[#d0d5ff]/60 bg-white text-[#0b0f1c] hover:border-[#74e4ff]/60"
                   }`}
@@ -136,6 +154,7 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
                       {formatCurrency(plan.totalCents, currency)}
                     </p>
                   </div>
+                  <div className={`text-right text-xs font-semibold uppercase tracking-[0.3em] ${isSelected ? "text-truelyNavy/70" : "text-truelyNavy/50"}`}>
                   <div className={`text-right text-xs font-semibold uppercase tracking-[0.3em] ${isSelected ? "text-white/80" : "text-[#313754]/60"}`}>
                     {formatCurrency(Math.ceil(plan.pricePerDay), currency)} / day
                   </div>
@@ -146,6 +165,20 @@ export default function PlanSlider({ plans, markupPct, currency, selectedIndex, 
         </div>
       ) : null}
 
+      <Card className="border-truelySky/30 bg-white p-6 shadow-[0_20px_70px_rgba(5,25,71,0.12)]">
+        <div className="flex items-center justify-between text-sm font-semibold text-truelyNavy/70">
+          <span>{formatPeriodLabel(active.periodDays)} validity</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-truelySky">Instant QR delivery</span>
+        </div>
+        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-truelyNavy/50">Total</p>
+            <p className="text-3xl font-semibold text-truelyNavy">{formatCurrency(active.totalCents, currency)}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-truelyNavy/50">
+              From {formatCurrency(Math.ceil(active.pricePerDay), currency)} per day
+            </p>
+          </div>
+          <Badge className="self-start bg-truelyMint/70 text-truelyNavy">
       <Card className="border-[#d0d5ff]/60 bg-white p-6 shadow-[0_16px_60px_rgba(20,24,53,0.1)]">
         <div className="flex items-center justify-between text-sm font-semibold text-[#313754]/70">
           <span>{formatPeriodLabel(active.periodDays)} validity</span>

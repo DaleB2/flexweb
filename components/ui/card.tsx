@@ -1,8 +1,11 @@
+"use client";
+
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("rounded-3xl border border-truelySky/30 bg-white shadow-[0_24px_90px_rgba(5,25,71,0.15)]", className)} {...props} />
   <div ref={ref} className={cn("rounded-3xl border border-[#d0d5ff]/50 bg-white shadow-[0_24px_90px_rgba(28,26,81,0.12)]", className)} {...props} />
 ));
 Card.displayName = "Card";
@@ -21,6 +24,7 @@ CardTitle.displayName = "CardTitle";
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
+    <p ref={ref} className={cn("text-sm text-truelyNavy/60", className)} {...props} />
     <p ref={ref} className={cn("text-sm text-[#313754]/70", className)} {...props} />
   ),
 );
