@@ -1,9 +1,19 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import Header from "@/components/Header";
-import PlanCard from "@/components/PlanCard";
+import CountryPickerCard, { type PlanIntent } from "@/components/CountryPickerCard";
+import PlanSheet from "@/components/PlanSheet";
+import SummaryAndCheckoutStack, {
+  type CheckoutSelection,
+  type CheckoutStep,
+} from "@/components/SummaryAndCheckoutStack";
 import { Badge } from "@/components/ui/badge";
+import type { EsimCountry, EsimPlanVariant, PlanCategory } from "@/lib/esimAccess";
+import type { SuccessPayload } from "@/components/SuccessCard";
 
 const heroBenefits = [
   "Best network guarantee",
@@ -83,11 +93,171 @@ const faqs = [
   },
 ];
 
+type StepParam = CheckoutStep | "select";
+
+function parseSelection(params: URLSearchParams): CheckoutSelection | null {
+  const countryName = params.get("country");
+  const countryCode = params.get("countryCode");
+  const planSlug = params.get("planSlug");
+  const totalCents = params.get("totalCents");
+  const currency = params.get("currency");
+  const periodDays = params.get("periodDays");
+  const dataLabel = params.get("dataLabel");
+  if (!countryName || !countryCode || !planSlug || !totalCents || !currency || !periodDays || !dataLabel) {
+    return null;
+  }
+
+  const selection: CheckoutSelection = {
+    countryName,
+    countryCode,
+    countryFlag: params.get("countryFlag") ?? undefined,
+    plan: {
+      slug: planSlug,
+      dataLabel,
+      periodDays: Number(periodDays),
+      retailCents: Number(totalCents),
+      currency,
+      wholesaleCents: Number(params.get("wholesaleCents") ?? "0"),
+      markupPct: Number(params.get("markupPct") ?? "0"),
+      notes: params.get("planNotes") ?? undefined,
+      dataGb: params.get("dataGb") ? Number(params.get("dataGb")) : undefined,
+      title: params.get("planTitle") ?? undefined,
+      category: (params.get("planCategory") as PlanCategory | null) ?? undefined,
+    },
+  };
+
+  return selection;
+}
+
+function formatCountryFromSelection(selection: CheckoutSelection | null): EsimCountry | null {
+  if (!selection) return null;
+  return {
+    code: selection.countryCode,
+    name: selection.countryName,
+    flagEmoji: selection.countryFlag,
+  };
+}
+
 export default function HomePage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [planSheetOpen, setPlanSheetOpen] = useState(false);
+  const [planIntent, setPlanIntent] = useState<PlanIntent>("unlimited");
+  const [sheetCountry, setSheetCountry] = useState<EsimCountry | null>(null);
+  const [order, setOrder] = useState<SuccessPayload | null>(null);
+
+  const stepParam = (searchParams.get("step") as StepParam) ?? "select";
+  const emailParam = searchParams.get("email") ?? undefined;
+  const existingCustomer = searchParams.get("existing") === "true";
+
+  const selection = useMemo(() => parseSelection(new URLSearchParams(searchParams.toString())), [searchParams]);
+  const selectedCountry = sheetCountry ?? formatCountryFromSelection(selection);
+  const intentForUi = (selection?.plan.category as PlanIntent | undefined) ?? planIntent;
+
+  const updateParams = useCallback(
+    (mutator: (params: URLSearchParams) => void) => {
+      const next = new URLSearchParams(searchParams.toString());
+      mutator(next);
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const handlePlanIntent = (country: EsimCountry, intent: PlanIntent) => {
+    setSheetCountry(country);
+    setPlanIntent(intent);
+    setPlanSheetOpen(true);
+  };
+
+  const handlePlanConfirm = (plan: EsimPlanVariant) => {
+    const country = sheetCountry ?? formatCountryFromSelection(selection);
+    if (!country) return;
+    updateParams((params) => {
+      params.set("country", country.name);
+      params.set("countryCode", country.code);
+      if (country.flagEmoji) params.set("countryFlag", country.flagEmoji);
+      params.set("planSlug", plan.slug);
+      params.set("planTitle", plan.title ?? plan.dataLabel);
+      params.set("dataLabel", plan.dataLabel);
+      if (plan.dataGb != null) params.set("dataGb", String(plan.dataGb));
+      else params.delete("dataGb");
+      params.set("periodDays", String(plan.periodDays));
+      params.set("wholesaleCents", String(plan.wholesaleCents));
+      params.set("markupPct", String(plan.markupPct));
+      params.set("totalCents", String(plan.retailCents));
+      params.set("currency", plan.currency);
+      params.set("planCategory", plan.category);
+      if (plan.notes) params.set("planNotes", plan.notes);
+      else params.delete("planNotes");
+      params.set("step", "summary");
+      params.delete("email");
+      params.delete("existing");
+    });
+    setOrder(null);
+    setPlanIntent(plan.category as PlanIntent);
+    setPlanSheetOpen(false);
+  };
+
+  const handleCloseStack = () => {
+    updateParams((params) => {
+      params.set("step", "select");
+    });
+  };
+
+  const handleProceedToEmail = () => {
+    updateParams((params) => {
+      params.set("step", "email");
+    });
+  };
+
+  const handleEmailIdentified = ({ email, exists }: { email: string; exists: boolean }) => {
+    updateParams((params) => {
+      params.set("email", email);
+      params.set("existing", String(exists));
+      params.set("step", exists ? "login" : "payment");
+    });
+  };
+
+  const handleLoginSuccess = () => {
+    updateParams((params) => {
+      params.set("step", "payment");
+      params.set("existing", "true");
+    });
+  };
+
+  const handlePaymentSuccess = (payload: SuccessPayload) => {
+    setOrder(payload);
+    updateParams((params) => {
+      params.set("step", "success");
+    });
+  };
+
+  const handleBackToSummary = () => {
+    updateParams((params) => {
+      params.set("step", "summary");
+    });
+  };
+
+  const handleBackToEmail = () => {
+    updateParams((params) => {
+      params.set("step", "email");
+    });
+  };
+
+  const handleBackToPlan = () => {
+    updateParams((params) => {
+      params.set("step", "select");
+    });
+    if (selection) {
+      setSheetCountry(formatCountryFromSelection(selection));
+      setPlanSheetOpen(true);
+    }
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <Header />
-
       <main className="relative z-10 flex flex-col gap-28 pb-28 pt-28">
         <section className="relative isolate overflow-hidden">
           <div className="absolute inset-0">
@@ -146,9 +316,11 @@ export default function HomePage() {
             </div>
 
             <div className="flex w-full max-w-lg shrink-0 flex-col gap-6">
-              <div className="rounded-[40px] border border-white/15 bg-white/10 p-1 shadow-[0_30px_120px_rgba(4,17,49,0.45)] backdrop-blur">
-                <PlanCard />
-              </div>
+              <CountryPickerCard
+                selectedCountry={selectedCountry ?? undefined}
+                intent={intentForUi}
+                onPlanIntent={handlePlanIntent}
+              />
             </div>
           </div>
         </section>
@@ -158,70 +330,131 @@ export default function HomePage() {
             <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
               <div className="space-y-5">
                 <Badge className="bg-white/20 text-white">How it works</Badge>
-                <h2 className="text-3xl font-semibold">Stacked steps, zero friction.</h2>
-                <p className="text-base text-white/80">
-                  Select your country above, explore available plans in the sheet, and continue into the Truely-style checkout flow where email verification, login, and payment live in one stack.
+                <h2 className="text-3xl font-semibold">Slide into Truely&apos;s stacked checkout</h2>
+                <p className="text-sm text-white/70">
+                  Pick a destination on the hero card, explore real plan variants, and move through summary, email, login, and payment without leaving the screen.
                 </p>
-                <ul className="space-y-3 text-sm text-white/75">
-                  <li>• Country picker opens the slider sheet for data + duration.</li>
-                  <li>• Plan summary keeps totals front-and-center before checkout.</li>
-                  <li>• Checkout cards stack email → login → payment seamlessly.</li>
-                </ul>
-              </div>
-              <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
-                <PlanCard />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[36px] border border-white/10 bg-white text-truelyNavy shadow-[0_36px_110px_rgba(5,25,71,0.35)]">
-            <div className="grid gap-6 p-10 sm:grid-cols-2">
-              {featureCards.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="rounded-[28px] border border-truelySky/30 bg-white/60 p-6 text-left shadow-[0_18px_60px_rgba(7,25,67,0.12)]"
-                >
-                  <h3 className="text-xl font-semibold text-truelyNavy">{feature.title}</h3>
-                  <p className="mt-3 text-sm text-truelyNavy/70">{feature.description}</p>
+                <div className="space-y-4">
+                  {featureCards.map((feature) => (
+                    <div key={feature.title} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                      <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
+                      <p className="text-sm text-white/70">{feature.description}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div className="grid gap-4">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
+                  <h3 className="text-xl font-semibold text-white">Stacked state machine</h3>
+                  <p>
+                    Every step is modeled with <code className="rounded bg-white/10 px-1">?step=</code> query params. Go back anytime without losing your country or plan.
+                  </p>
+                </div>
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
+                  <h3 className="text-xl font-semibold text-white">Inline authentication</h3>
+                  <p>
+                    Returning travelers see a password prompt instantly. New guests skip straight to secure payment and receive their invite after checkout.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         <section id="destinations" className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[36px] border border-white/10 bg-white/5 p-10 text-white shadow-[0_32px_110px_rgba(4,25,70,0.35)] backdrop-blur">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-3">
-                <Badge className="bg-white/20 text-white">200+ regions</Badge>
-                <h2 className="text-3xl font-semibold">Pick a hotspot, land connected.</h2>
-                <p className="text-base text-white/75">
-                  Flex automatically pairs you with the strongest partner networks in each location, so you can work, stream, and share without roaming shock.
+          <div className="rounded-[36px] border border-white/10 bg-white/5 p-10 text-white shadow-[0_32px_120px_rgba(4,25,70,0.35)] backdrop-blur">
+            <div className="space-y-6">
+              <Badge className="bg-white/20 text-white">Popular regions</Badge>
+              <h2 className="text-3xl font-semibold">Destinations our travelers love</h2>
+              <div className="grid grid-cols-2 gap-4 text-sm text-white/70 md:grid-cols-3">
+                {destinationShowcase.map((destination) => (
+                  <div key={destination} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    {destination}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[36px] border border-white/10 bg-white/5 p-10 text-white shadow-[0_32px_120px_rgba(4,25,70,0.35)] backdrop-blur">
+            <div className="grid gap-10 md:grid-cols-[0.7fr_1.3fr] md:items-center">
+              <div className="space-y-4">
+                <Badge className="bg-white/20 text-white">Comparison</Badge>
+                <h2 className="text-3xl font-semibold">Why Flex feels like Truely</h2>
+                <p className="text-sm text-white/70">
+                  We modeled the experience around Truely’s stacked cards. Inline authentication, preserved state, and payment all stay on one hero.
                 </p>
               </div>
-              <Link
-                href="/destinations"
-                className="rounded-full border border-white/30 px-8 py-3 text-sm font-semibold uppercase tracking-[0.36em] text-white/80 transition hover:border-white hover:text-white"
-              >
-                See destination list
-              </Link>
+              <div className="overflow-hidden rounded-3xl border border-white/10">
+                <table className="w-full text-left text-sm text-white/80">
+                  <thead className="bg-white/5 text-xs uppercase tracking-[0.36em] text-white/60">
+                    <tr>
+                      <th className="px-4 py-3">Feature</th>
+                      <th className="px-4 py-3">Flex</th>
+                      <th className="px-4 py-3">Roaming SIM</th>
+                      <th className="px-4 py-3">Tourist kiosk</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisons.map((row) => (
+                      <tr key={row.label} className="border-t border-white/10">
+                        <td className="px-4 py-3 text-white">{row.label}</td>
+                        <td className="px-4 py-3 text-truelyLime">{row.flex ? "Yes" : "—"}</td>
+                        <td className="px-4 py-3">{row.roaming ? "Yes" : "—"}</td>
+                        <td className="px-4 py-3">{row.tourist ? "Yes" : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {destinationShowcase.map((destination) => (
-                <div
-                  key={destination}
-                  className="rounded-[28px] border border-white/15 bg-white/10 px-5 py-6 text-white shadow-[0_18px_70px_rgba(4,25,70,0.35)]"
-                >
-                  <p className="text-lg font-semibold">{destination}</p>
-                  <p className="text-xs uppercase tracking-[0.34em] text-white/60">Unlimited data partner</p>
-                </div>
-              ))}
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[36px] border border-white/10 bg-white/5 p-10 text-white shadow-[0_32px_120px_rgba(4,25,70,0.35)] backdrop-blur">
+            <div className="space-y-6">
+              <Badge className="bg-white/20 text-white">FAQ</Badge>
+              <h2 className="text-3xl font-semibold">Questions travelers ask</h2>
+              <div className="grid gap-4">
+                {faqs.map((faq) => (
+                  <details key={faq.question} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                    <summary className="cursor-pointer text-lg font-semibold text-white">{faq.question}</summary>
+                    <p className="mt-3 text-sm text-white/70">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
         </section>
       </main>
+
+      <PlanSheet
+        open={planSheetOpen}
+        onOpenChange={setPlanSheetOpen}
+        country={selectedCountry ?? null}
+        intent={intentForUi as PlanCategory}
+        onConfirm={handlePlanConfirm}
+      />
+
+      <SummaryAndCheckoutStack
+        visible={stepParam !== "select" && !!selection}
+        step={(stepParam === "select" ? "summary" : stepParam) as CheckoutStep}
+        selection={selection}
+        email={emailParam}
+        existingCustomer={existingCustomer}
+        order={order}
+        onClose={handleCloseStack}
+        onProceedToEmail={handleProceedToEmail}
+        onEmailIdentified={handleEmailIdentified}
+        onLoginSuccess={handleLoginSuccess}
+        onPaymentSuccess={handlePaymentSuccess}
+        onBackToSummary={handleBackToSummary}
+        onBackToEmail={handleBackToEmail}
+        onBackToPlan={handleBackToPlan}
+      />
     </div>
   );
 }
