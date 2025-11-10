@@ -153,7 +153,7 @@ export default function PlanCard() {
 
   const totalCents = useMemo(() => {
     if (!activePlan) return null;
-    return Math.ceil(activePlan.priceCents * (1 + markupPct / 100));
+    return Math.ceil(activePlan.wholesalePriceCents * (1 + markupPct / 100));
   }, [activePlan, markupPct]);
 
   const handleViewPackages = useCallback(() => {
@@ -180,7 +180,7 @@ export default function PlanCard() {
       packageCode: activePlan.packageCode,
       dataGb: String(activePlan.dataGb),
       periodDays: String(activePlan.periodDays),
-      wholesaleCents: String(activePlan.priceCents),
+      wholesaleCents: String(activePlan.wholesalePriceCents),
       markupPct: String(markupPct),
       totalCents: String(totalCents),
       currency,

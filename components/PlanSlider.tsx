@@ -34,7 +34,7 @@ export function formatPeriodLabel(days: number) {
 export default function PlanSlider({ plans, markupPct, currency, selectedIndex, onChange }: PlanSliderProps) {
   const computed = useMemo(() => {
     return plans.map((plan, index) => {
-      const totalCents = Math.ceil(plan.priceCents * (1 + markupPct / 100));
+      const totalCents = Math.ceil(plan.wholesalePriceCents * (1 + markupPct / 100));
       const pricePerDay = totalCents / plan.periodDays;
       return { ...plan, totalCents, pricePerDay, originalIndex: index };
     });

@@ -28,7 +28,7 @@ export default function DestinationPlanShowcase({
 
   const computedTotal = useMemo(() => {
     if (!activePlan) return null;
-    return Math.ceil(activePlan.priceCents * (1 + markupPct / 100));
+    return Math.ceil(activePlan.wholesalePriceCents * (1 + markupPct / 100));
   }, [activePlan, markupPct]);
 
   const handleCheckout = () => {
@@ -40,7 +40,7 @@ export default function DestinationPlanShowcase({
       packageCode: activePlan.packageCode,
       dataGb: String(activePlan.dataGb),
       periodDays: String(activePlan.periodDays),
-      wholesaleCents: String(activePlan.priceCents),
+      wholesaleCents: String(activePlan.wholesalePriceCents),
       markupPct: String(markupPct),
       totalCents: String(computedTotal),
       currency,
