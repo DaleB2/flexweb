@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const ESIM_BASE_URL = (process.env.ESIM_ACCESS_BASE_URL ?? "https://api.esimaccess.com").trim();
+const ESIM_BASE_URL = (process.env.ESIM_API_BASE ?? "https://api.esimaccess.com").trim();
 const ESIM_ACCESS_CODE = (process.env.ESIM_ACCESS_CODE ?? "").trim();
 const ESIM_SECRET = (process.env.ESIM_SECRET ?? "").trim();
 const DEFAULT_CURRENCY = (process.env.DEFAULT_CURRENCY ?? "USD").trim();
