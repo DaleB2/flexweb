@@ -171,10 +171,6 @@ export default function HomePage() {
               <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
                 <PlanCard />
               </div>
-              </div>
-              <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
-                <PlanCard />
-              </div>
             </div>
           </div>
         </section>
