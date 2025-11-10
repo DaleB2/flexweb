@@ -17,18 +17,15 @@ export function CheckoutSheet({ open, onOpenChange, onPlanAnother }: CheckoutShe
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        title="Flex Checkout"
         aria-describedby="flex-checkout-description"
         className={SHEET_CONTENT_CLASSES}
       >
         <span id="flex-checkout-description" className="sr-only">
           Flex eSIM checkout flow with stacked cards for destination, plan, account, payment, and confirmation steps.
         </span>
-        <CheckoutFlow
-          onClose={() => onOpenChange(false)}
-          onPlanAnother={onPlanAnother}
-        />
+        <CheckoutFlow onClose={() => onOpenChange(false)} onPlanAnother={onPlanAnother} />
       </SheetContent>
     </Sheet>
   );
 }
+
