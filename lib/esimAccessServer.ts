@@ -5,6 +5,7 @@ import type { EsimCountry, EsimPlanVariant, PlanCategory } from "@/lib/esimAcces
 const baseUrl = (process.env.ESIM_API_BASE ?? "https://api.esimaccess.com").replace(/\/$/, "");
 const accessCode = process.env.ESIM_ACCESS_CODE?.trim();
 const secret = process.env.ESIM_SECRET?.trim();
+const partnerId = process.env.ESIM_ACCESS_PARTNER_ID?.trim();
 const defaultMarkupPct = Number.parseFloat(process.env.DEFAULT_MARKUP_PCT ?? "20");
 
 function requireConfig() {
@@ -28,6 +29,8 @@ async function esimRequest<T>(path: string, init: RequestInit = {}): Promise<T> 
     Authorization: accessCode?.startsWith("Bearer ") ? accessCode : `Bearer ${accessCode}`,
     "X-API-Key": accessCode,
     ...(secret ? { "X-API-Secret": secret } : {}),
+    Authorization: `Bearer ${accessCode}`,
+    "X-API-Key": accessCode,
   };
 
   const response = await fetch(url, {
