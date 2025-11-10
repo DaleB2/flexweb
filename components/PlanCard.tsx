@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { NormalizedPlan } from "@/lib/esim";
+
 import CountrySelector from "./CountrySelector";
 import PlanSlider, { formatCurrency, formatPeriodLabel } from "./PlanSlider";
 
@@ -17,21 +24,32 @@ interface CatalogResponse {
 }
 
 const reassurance = [
-  "Instant QR activation",
-  "Keep your phone number active",
-  "Works in hotspots & tablets",
+  {
+    title: "Switchless activation",
+    description: "Scan the QR in seconds and you’re live.",
+  },
+  {
+    title: "Keep your number",
+    description: "iMessage, WhatsApp, and calls stay on your SIM.",
+  },
+  {
+    title: "Best partner networks",
+    description: "Top-tier carriers in every region we support.",
+  },
 ];
 
 export default function PlanCard() {
   const router = useRouter();
   const [countries, setCountries] = useState<string[]>([]);
   const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [activeCountry, setActiveCountry] = useState<string | null>(null);
   const [plans, setPlans] = useState<NormalizedPlan[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [markupPct, setMarkupPct] = useState<number>(Number(process.env.NEXT_PUBLIC_DEFAULT_MARKUP_PCT ?? 18));
   const [currency, setCurrency] = useState<string>(process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? "USD");
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,23 +61,14 @@ export default function PlanCard() {
         if (!response.ok) {
           throw new Error(json.error ?? "Failed to load destinations");
         }
+
         if (cancelled) return;
 
         const fetchedCountries = Array.isArray(json.countries)
           ? json.countries.map((code) => code.trim().toUpperCase()).filter((code) => code)
           : [];
 
-        if (fetchedCountries.length === 0) {
-          throw new Error("No destinations available");
-        }
-
         setCountries(fetchedCountries);
-        setError(null);
-        setCountryCode((current) => {
-          if (!current) return null;
-          const normalized = current.trim().toUpperCase();
-          return fetchedCountries.includes(normalized) ? normalized : null;
-        });
         const markupFromResponse = json.markup_pct ?? json.markupPct;
         if (typeof markupFromResponse === "number") {
           setMarkupPct(markupFromResponse);
@@ -71,10 +80,6 @@ export default function PlanCard() {
         console.error("Failed to load countries", err);
         if (!cancelled) {
           setCountries([]);
-          setCountryCode(null);
-          setPlans([]);
-          setSelectedIndex(0);
-          setError("We couldn’t reach the catalog. Refresh or try again later.");
         }
       }
     };
@@ -86,16 +91,15 @@ export default function PlanCard() {
   }, []);
 
   useEffect(() => {
-    if (!countryCode) return;
+    if (!activeCountry) return;
 
     let aborted = false;
     setIsLoadingPlans(true);
     setError(null);
-    setPlans([]);
 
     const loadPlans = async () => {
       try {
-        const normalizedCode = countryCode.trim().toUpperCase();
+        const normalizedCode = activeCountry.trim().toUpperCase();
         const response = await fetch(`/api/catalog?countryCode=${normalizedCode}`, { cache: "no-store" });
         const json: CatalogResponse = await response.json();
         if (!response.ok) {
@@ -104,7 +108,7 @@ export default function PlanCard() {
         if (aborted) return;
 
         if (!Array.isArray(json.plans) || json.plans.length === 0) {
-          throw new Error("No plans available for this destination yet.");
+          throw new Error("We’re refreshing plans for this country. Try again shortly.");
         }
 
         setPlans(json.plans);
@@ -119,9 +123,8 @@ export default function PlanCard() {
       } catch (err) {
         console.error("Failed to load plans", err);
         if (!aborted) {
-          setError(
-            err instanceof Error ? err.message : "We couldn’t load plans. Pick another destination for now.",
-          );
+          setPlans([]);
+          setError(err instanceof Error ? err.message : "We couldn’t load plans. Try a different country.");
         }
       } finally {
         if (!aborted) {
@@ -135,126 +138,210 @@ export default function PlanCard() {
     return () => {
       aborted = true;
     };
-  }, [countryCode]);
+  }, [activeCountry]);
 
   const activePlan = plans[selectedIndex];
 
   const countryName = useMemo(() => {
-    if (!countryCode) return "";
+    if (!activeCountry) return "";
     try {
-      return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode) ?? countryCode;
+      return new Intl.DisplayNames(["en"], { type: "region" }).of(activeCountry) ?? activeCountry;
     } catch {
-      return countryCode;
+      return activeCountry;
     }
-  }, [countryCode]);
+  }, [activeCountry]);
 
   const totalCents = useMemo(() => {
     if (!activePlan) return null;
-    return Math.ceil(activePlan.priceCents * (1 + markupPct / 100));
+    return Math.ceil(activePlan.wholesalePriceCents * (1 + markupPct / 100));
   }, [activePlan, markupPct]);
 
+  const handleViewPackages = useCallback(() => {
+    if (!countryCode) return;
+    setActiveCountry(countryCode);
+    setIsSheetOpen(true);
+  }, [countryCode]);
+
+  const handleSelectCountry = useCallback((code: string) => {
+    setCountryCode(code);
+    setPlans([]);
+    setSelectedIndex(0);
+    setError(null);
+    setActiveCountry((current) => (current === code ? current : null));
+    setIsSheetOpen(false);
+  }, []);
+
   const handleContinue = useCallback(() => {
-    if (!countryCode || !activePlan || !totalCents) return;
+    if (!activeCountry || !activePlan || !totalCents) return;
     const params = new URLSearchParams({
-      countryCode,
+      countryCode: activeCountry,
       country: countryName,
       slug: activePlan.slug,
       packageCode: activePlan.packageCode,
       dataGb: String(activePlan.dataGb),
       periodDays: String(activePlan.periodDays),
-      wholesaleCents: String(activePlan.priceCents),
+      wholesaleCents: String(activePlan.wholesalePriceCents),
       markupPct: String(markupPct),
       totalCents: String(totalCents),
       currency,
     });
     router.push(`/checkout?${params.toString()}`);
-  }, [activePlan, countryCode, countryName, currency, markupPct, router, totalCents]);
-
-  const buttonDisabled = !activePlan || isLoadingPlans;
+  }, [activeCountry, activePlan, countryName, currency, markupPct, router, totalCents]);
 
   return (
-    <div className="relative overflow-hidden rounded-[34px] border border-white/10 bg-white/90 p-8 text-midnight shadow-[0_40px_120px_rgba(18,7,50,0.35)] backdrop-blur">
-      <div className="absolute -right-24 -top-24 h-56 w-56 rounded-full bg-gradient-to-br from-iris/40 via-fuchsia/40 to-amber/40 blur-3xl" />
-      <div className="absolute -bottom-32 -left-20 h-64 w-64 rounded-full bg-gradient-to-tr from-iris/30 via-plum/30 to-lilac/30 blur-3xl" />
+    <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#ffffff] via-[#f5f8ff] to-[#eef1ff]/80 p-8 text-[#10152b] shadow-[0_40px_120px_rgba(16,21,43,0.18)]">
+      <div className="absolute inset-x-0 -top-48 h-64 bg-[radial-gradient(circle_at_top,_rgba(116,228,255,0.32),_transparent_70%)]" aria-hidden />
+      <CardHeader className="relative space-y-4 p-0">
+        <Badge className="self-start bg-[#0f1c46] text-white">Truely Switchless</Badge>
+        <CardTitle className="text-4xl font-semibold leading-tight text-[#0b0f1c]">
+          Unlimited internet that travels with you.
+        </CardTitle>
+        <p className="max-w-xl text-base text-[#1f2544]/70">
+          Pick a destination, preview partner plans, and continue to checkout in a stack that mirrors Truely’s flow.
+        </p>
+      </CardHeader>
+      <CardContent className="relative mt-8 space-y-8 p-0">
+        <CountrySelector countries={countries} selected={countryCode} onSelect={handleSelectCountry} />
 
-      <div className="relative space-y-6">
-        <div className="space-y-2">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.4em] text-iris/70">Build your eSIM</p>
-          <h2 className="text-3xl font-bold text-midnight sm:text-[2.4rem]">
-            Choose a destination and lock in flexible data.
-          </h2>
-          <p className="max-w-lg text-sm text-midnight/70">
-            Pick the stay length that fits your trip. Every plan comes with instant delivery, full-speed data, and support that follows you globally.
-          </p>
+        <div className="grid gap-4 rounded-3xl border border-[#d0d5ff]/60 bg-white/80 p-6 backdrop-blur">
+          {reassurance.map((item) => (
+            <div key={item.title} className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-[#0b0f1c]">{item.title}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1f2544]/50">{item.description}</p>
+            </div>
+          ))}
         </div>
 
-        <CountrySelector countries={countries} selected={countryCode} onSelect={setCountryCode} variant="light" />
-
-        <div className="rounded-3xl border border-lilac/40 bg-moon/70 p-6 shadow-[0_25px_70px_rgba(89,43,234,0.15)]">
-          {isLoadingPlans ? (
-            <div className="space-y-5">
-              <div className="h-5 animate-pulse rounded-full bg-white/70" />
-              <div className="h-28 animate-pulse rounded-[28px] bg-white/70" />
-            </div>
-          ) : error ? (
-            <div className="rounded-2xl border border-fuchsia/40 bg-fuchsia/10 p-4 text-sm font-semibold text-fuchsia">
-              {error}
-            </div>
-          ) : plans.length > 0 ? (
-            <PlanSlider
-              plans={plans}
-              markupPct={markupPct}
-              currency={currency}
-              selectedIndex={selectedIndex}
-              onChange={setSelectedIndex}
-            />
-          ) : (
-            <div className="rounded-2xl border border-white/60 bg-white p-6 text-center text-sm font-semibold text-midnight/70">
-              Select a destination to view plans.
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-[28px] border border-white/40 bg-white/80 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-midnight/70">
-            <div>
-              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.38em] text-midnight/50">You get</p>
-              <ul className="mt-3 space-y-2">
-                {reassurance.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm font-semibold">
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-iris/10 text-iris">✓</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-3xl border border-lilac/60 bg-moon/80 p-5 text-right">
-              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.35em] text-midnight/50">Total today</p>
-              <p className="text-3xl font-bold text-midnight">
-                {totalCents && activePlan ? formatCurrency(totalCents, currency) : "—"}
-              </p>
-              <p className="text-[0.55rem] font-semibold uppercase tracking-[0.28em] text-midnight/40">
-                {activePlan ? `${formatPeriodLabel(activePlan.periodDays)} validity` : "Pick a plan"}
-              </p>
-            </div>
+        <div className="flex flex-col gap-4 rounded-3xl bg-[#0f1c46] px-6 py-6 text-white shadow-[0_32px_90px_rgba(15,28,70,0.45)]">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.34em] text-white/60">
+            <span>Next step</span>
+            <span>Email verification</span>
+          </div>
+          <div>
+            <p className="text-3xl font-semibold">Stacked checkout like Truely</p>
+            <p className="mt-1 text-sm text-white/80">
+              We’ll open the plan builder sheet where you pick the stay and see totals before email capture.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+            <span>Instant QR</span>
+            <Separator orientation="vertical" className="hidden h-4 w-px bg-white/40 sm:block" />
+            <span>Hotspot ready</span>
+            <Separator orientation="vertical" className="hidden h-4 w-px bg-white/40 sm:block" />
+            <span>Stripe secure</span>
           </div>
         </div>
+      </CardContent>
+      <CardFooter className="mt-8 flex flex-col gap-4 p-0">
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <Button
+            size="lg"
+            className="w-full justify-between rounded-full px-8 text-sm uppercase tracking-[0.28em]"
+            onClick={handleViewPackages}
+            disabled={!countryCode}
+          >
+            <span>View packages</span>
+            <span className="text-white/70">{countryCode ? "Step 1 of 3" : "Select a country"}</span>
+          </Button>
+          <SheetContent>
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-[#d0d5ff]/60 bg-[#f5f7ff] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/60">Destination</p>
+                <p className="mt-2 flex items-center gap-3 text-lg font-semibold text-[#0b0f1c]">
+                  <span className="text-2xl" aria-hidden>
+                    {activeCountry && activeCountry.length === 2
+                      ? String.fromCodePoint(
+                          ...activeCountry.toUpperCase().split("").map((char) => 127397 + char.charCodeAt(0)),
+                        )
+                      : ""}
+                  </span>
+                  {countryName || "Select a country"}
+                </p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/50">
+                  Unlimited data network partners
+                </p>
+              </div>
 
-        <button
-          type="button"
-          onClick={handleContinue}
-          disabled={buttonDisabled}
-          className="relative w-full overflow-hidden rounded-full bg-gradient-to-r from-iris to-fuchsia px-6 py-4 text-sm font-semibold uppercase tracking-[0.4em] text-white shadow-[0_25px_80px_rgba(123,60,237,0.45)] transition hover:shadow-[0_30px_90px_rgba(123,60,237,0.6)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {activePlan && totalCents
-            ? `Continue — ${formatCurrency(totalCents, currency)}`
-            : "Select a destination"}
-        </button>
+              {isLoadingPlans ? (
+                <div className="space-y-5">
+                  <div className="h-5 w-40 animate-pulse rounded-full bg-[#e4e8ff]" />
+                  <div className="h-32 animate-pulse rounded-3xl bg-[#eef1ff]" />
+                  <div className="h-44 animate-pulse rounded-3xl bg-[#eef1ff]" />
+                </div>
+              ) : error ? (
+                <Card className="border-[#ffb3c0]/60 bg-[#fff2f6] p-6 text-sm font-semibold text-[#8a1f3d] shadow-none">
+                  {error}
+                </Card>
+              ) : plans.length > 0 ? (
+                <Tabs defaultValue="unlimited" className="w-full">
+                  <TabsList className="flex justify-start gap-2 rounded-full border-0 bg-[#f5f7ff] p-1">
+                    <TabsTrigger value="unlimited" className="flex-1 rounded-full text-xs uppercase tracking-[0.3em]">
+                      Unlimited data
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="payg"
+                      className="flex-1 rounded-full text-xs uppercase tracking-[0.3em] text-[#313754]/50"
+                      disabled
+                    >
+                      Pay per GB
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="unlimited">
+                    <PlanSlider
+                      plans={plans}
+                      markupPct={markupPct}
+                      currency={currency}
+                      selectedIndex={selectedIndex}
+                      onChange={setSelectedIndex}
+                    />
+                  </TabsContent>
+                  <TabsContent value="payg">
+                    <Card className="border-dashed border-[#d0d5ff]/60 bg-white/80 p-6 text-center text-sm text-[#313754]/70 shadow-none">
+                      Pay-as-you-go options are coming soon.
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <Card className="border-dashed border-[#d0d5ff]/60 bg-white/80 p-6 text-center text-sm text-[#313754]/70 shadow-none">
+                  Pick a country to load partner plans.
+                </Card>
+              )}
 
-        <p className="text-center text-[0.6rem] font-semibold uppercase tracking-[0.32em] text-midnight/40">
-          Powered by Stripe. Taxes included.
+              <div className="rounded-3xl border border-[#d0d5ff]/60 bg-white p-6 shadow-[0_16px_60px_rgba(20,24,53,0.12)]">
+                <div className="flex items-center justify-between text-sm font-semibold text-[#313754]/70">
+                  <span>{activePlan ? formatPeriodLabel(activePlan.periodDays) : "Plan"}</span>
+                  <span className="text-xs uppercase tracking-[0.3em] text-[#74e4ff]">Stripe secure</span>
+                </div>
+                <p className="mt-4 text-3xl font-semibold text-[#0b0f1c]">
+                  {totalCents && activePlan ? formatCurrency(totalCents, currency) : "Choose a plan"}
+                </p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/60">
+                  {activePlan
+                    ? `From ${formatCurrency(Math.ceil(totalCents! / activePlan.periodDays), currency)} per day`
+                    : "Select a stay length"}
+                </p>
+                <p className="mt-4 text-xs font-medium text-[#313754]/70">
+                  Continue to email verification next. Existing Truely users will be prompted to sign in.
+                </p>
+                <Button
+                  size="lg"
+                  className="mt-6 w-full justify-center rounded-full text-sm uppercase tracking-[0.3em]"
+                  onClick={handleContinue}
+                  disabled={!activePlan || !totalCents}
+                >
+                  {activePlan && totalCents
+                    ? `Continue — ${formatCurrency(totalCents, currency)}`
+                    : "Select a plan"}
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <p className="text-center text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#313754]/50">
+          Trusted by 150k+ users. Taxes included.
         </p>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }

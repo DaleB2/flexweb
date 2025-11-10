@@ -1,11 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import DestinationPlans from "@/components/DestinationPlans";
+import DestinationPlanShowcase from "@/components/DestinationPlanShowcase";
 import Header from "@/components/Header";
 import { listAllCountries, listPlansByLocation } from "@/lib/esim";
-
-import styles from "./page.module.css";
 
 const heroShots = [
   "https://images.unsplash.com/photo-1526481280695-3c4697a1b12b?auto=format&fit=crop&w=1600&q=80",
@@ -130,7 +128,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
             <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">{loadError}</div>
           ) : catalog ? (
             <DestinationPlanShowcase
-              countryCode={normalizedCode}
+              countryCode={resolvedCode}
               countryName={countryName}
               plans={catalog.plans}
               markupPct={catalog.markupPct ?? 18}

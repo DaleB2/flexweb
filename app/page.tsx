@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Header from "@/components/Header";
-import PlanSearch from "@/components/PlanSearch";
+import PlanCard from "@/components/PlanCard";
 
 const highlightStats = [
   { label: "Destinations", value: "200+" },
@@ -72,59 +72,6 @@ const faqs = [
   {
     question: "Is hotspotting allowed?",
     answer: "Absolutely. Share data with laptops, tablets, and friends without extra fees.",
-  },
-];
-
-const heroStats = [
-  { label: "Destinations ready", value: "190+" },
-  { label: "Activation time", value: "60 sec" },
-  { label: "Support crew", value: "24/7" },
-];
-
-const networkSignals = [
-  { icon: "⚡", label: "Instant QR delivery" },
-  { icon: "📶", label: "Partnered local towers" },
-  { icon: "🛡️", label: "Secure Stripe checkout" },
-  { icon: "🧭", label: "Arrival city briefings" },
-];
-
-const whyHighlights = [
-  {
-    title: "City breaks and sabbaticals",
-    description: "Stay powered for Lisbon workweeks or Seoul neon nights with plans sized to the day.",
-    icon: "🛫",
-  },
-  {
-    title: "Cultural respect built in",
-    description: "Each activation bundles etiquette intel from residents so you blend in with ease.",
-    icon: "🪩",
-  },
-  {
-    title: "Data without guesswork",
-    description: "Pricing is locked in the currency you pick. No roaming shocks or hidden add ons.",
-    icon: "💳",
-  },
-  {
-    title: "Hotspot friendly",
-    description: "Share connectivity with your travel crew or laptop without throttling surprises.",
-    icon: "📡",
-  },
-];
-
-const steps = [
-  "Pick the destination and plan variant that matches your stay length.",
-  "Checkout through Stripe with taxes and currency confirmed up front.",
-  "Scan the emailed QR when you land and toggle roaming to go live.",
-];
-
-const communityStories = [
-  {
-    body: "Flex kept our founders online through Nairobi demo day week. The cultural brief calmed first time travelers.",
-    author: "Sasha · Accelerator lead",
-  },
-  {
-    body: "During Sao Paulo fashion prep the hotspot handled streaming and uploads without a hitch.",
-    author: "Renata · Creative director",
   },
 ];
 
