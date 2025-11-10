@@ -7,9 +7,13 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import { loadStripe } from "@stripe/stripe-js";
 import type { Session } from "@supabase/supabase-js";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { createBrowserSupabaseClient } from "@/lib/supabaseClient";
-
-import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +72,7 @@ function parseDraft(params: URLSearchParams): Draft | null {
   } satisfies Draft;
 }
 
-function CheckoutSummary({ draft }: { draft: Draft }) {
+function PlanSummaryCard({ draft }: { draft: Draft }) {
   const formatter = useMemo(
     () =>
       new Intl.NumberFormat("en-US", {
@@ -86,44 +90,140 @@ function CheckoutSummary({ draft }: { draft: Draft }) {
       ? String.fromCodePoint(...draft.countryCode.toUpperCase().split("").map((char) => 127397 + char.charCodeAt(0)))
       : "";
 
+  const handleJumpToEmail = () => {
+    if (typeof document === "undefined") return;
+    const emailField = document.getElementById("checkout-email");
+    if (emailField instanceof HTMLElement) {
+      emailField.focus({ preventScroll: false });
+      emailField.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
   return (
-    <aside className="space-y-6 rounded-[32px] border border-lilac/60 bg-white p-7 text-midnight shadow-[0_25px_70px_rgba(18,7,50,0.15)]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl" aria-hidden>
-            {flag}
-          </span>
-          <div>
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-midnight/50">Destination</p>
-            <p className="text-2xl font-semibold">{draft.country ?? draft.countryCode}</p>
+    <Card className="border-0 bg-white p-6 shadow-[0_28px_90px_rgba(20,24,53,0.14)]">
+      <CardHeader className="space-y-3 p-0">
+        <Badge className="w-fit bg-[#ebefff] text-[#1a1f38]">Step 1 · Review plan</Badge>
+        <CardTitle className="text-2xl font-semibold text-[#0b0f1c]">Unlimited internet for your trip</CardTitle>
+        <p className="text-sm text-[#313754]/70">Double-check the plan you picked before we verify your email.</p>
+      </CardHeader>
+      <CardContent className="mt-5 space-y-6 p-0">
+        <div className="flex items-start justify-between rounded-3xl border border-[#d0d5ff]/60 bg-[#f5f7ff] p-5">
+          <div className="flex items-start gap-4">
+            <span className="text-3xl" aria-hidden>
+              {flag}
+            </span>
+            <div className="space-y-1 text-sm font-semibold text-[#0b0f1c]">
+              <p className="text-lg">{draft.country ?? draft.countryCode}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/50">
+                {draft.dataGb} GB · {draft.periodDays} days
+              </p>
+              <p className="text-xs font-medium text-[#313754]/60">Hotspot & tethering enabled</p>
+            </div>
           </div>
+          <Badge className="bg-white text-[#1a1f38]">Stripe Secure</Badge>
         </div>
-        <Link href="/" className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-iris transition hover:text-fuchsia">
-          Change
-        </Link>
-      </div>
-      <div className="rounded-[24px] border border-lilac/40 bg-moon/70 p-5">
-        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-midnight/50">Plan</p>
-        <p className="mt-2 text-xl font-semibold text-midnight">
-          {draft.dataGb} GB • {draft.periodDays} days
+
+        <div className="space-y-3 rounded-3xl border border-[#d0d5ff]/60 bg-white p-5">
+          <div className="flex items-center justify-between text-sm font-semibold text-[#313754]/70">
+            <span>Amount</span>
+            <span className="text-3xl font-semibold text-[#0b0f1c]">{total}</span>
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/60">
+            From {perDay} per day · taxes included
+          </p>
+          <Separator className="bg-[#d0d5ff]/60" />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Input placeholder="Enter promo code" disabled className="flex-1" />
+            <Button variant="outline" type="button" disabled className="sm:w-32">
+              Apply
+            </Button>
+          </div>
+          <p className="text-xs text-[#313754]/60">Promo codes are coming soon for loyal travelers.</p>
+        </div>
+
+        <Button
+          size="lg"
+          className="w-full justify-center rounded-full text-sm uppercase tracking-[0.3em]"
+          type="button"
+          onClick={handleJumpToEmail}
+        >
+          Continue
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmailStep({ email, onSubmit }: { email: string; onSubmit: (value: string) => void }) {
+  const [value, setValue] = useState(email);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    setValue(email);
+  }, [email]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
+    setSubmitted(true);
+  };
+
+  return (
+    <Card className="border-0 bg-white p-6 shadow-[0_24px_80px_rgba(20,24,53,0.12)]">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-3">
+          <Badge className="w-fit bg-[#ebefff] text-[#1a1f38]">Step 2 · Email</Badge>
+          <CardTitle className="text-2xl font-semibold text-[#0b0f1c]">Let’s find your Truely profile</CardTitle>
+          <p className="text-sm text-[#313754]/70">
+            We’ll check if you already have an account. If you’re new, you’ll head straight to payment.
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          type="button"
+          disabled
+          className="w-full justify-center rounded-full text-sm uppercase tracking-[0.3em] text-[#313754]/70"
+        >
+          Continue with Google
+        </Button>
+
+        <div className="relative flex items-center gap-3 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#313754]/40">
+          <Separator className="flex-1 bg-[#d0d5ff]/60" />
+          <span>or with email</span>
+          <Separator className="flex-1 bg-[#d0d5ff]/60" />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="checkout-email">Email address</Label>
+          <Input
+            id="checkout-email"
+            type="email"
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              setSubmitted(false);
+            }}
+            placeholder="traveler@you.com"
+            required
+          />
+        </div>
+
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full justify-center rounded-full text-sm uppercase tracking-[0.3em]"
+          disabled={!value.trim()}
+        >
+          {submitted && value.trim() === email ? "Email saved" : "Continue"}
+        </Button>
+        <p className="text-xs text-[#313754]/60">
+          We send receipts, QR instructions, and travel briefings to this email. No marketing spam.
         </p>
-        <p className="mt-1 text-sm font-semibold text-midnight/60">Unlimited data</p>
-      </div>
-      <div className="rounded-[28px] bg-gradient-to-r from-iris to-fuchsia px-6 py-7 text-white shadow-[0_22px_70px_rgba(123,60,237,0.5)]">
-        <div className="flex items-center justify-between">
-          <span className="text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-white/70">Total</span>
-          <span className="text-4xl font-semibold">{total}</span>
-        </div>
-        <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-white/70">
-          Starts from {perDay} / day
-        </span>
-      </div>
-      <ul className="space-y-2 text-sm font-semibold text-midnight/70">
-        <li>• Instant delivery after payment</li>
-        <li>• Works on unlocked eSIM-ready devices</li>
-        <li>• Keep your messaging apps active</li>
-      </ul>
-    </aside>
+      </form>
+    </Card>
   );
 }
 
@@ -158,33 +258,50 @@ function LoginPanel({ email, onAuthenticated }: { email: string; onAuthenticated
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-lilac/40 bg-white p-6 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">
-      <div>
-        <h3 className="text-xl font-semibold text-midnight">Welcome back</h3>
-        <p className="text-sm font-medium text-midnight/60">Log in to continue checkout for {email}.</p>
+    <Card className="border-0 bg-white p-6 shadow-[0_24px_80px_rgba(20,24,53,0.12)]">
+      <div className="space-y-3">
+        <Badge className="w-fit bg-[#ebefff] text-[#1a1f38]">Step 3 · Sign in</Badge>
+        <CardTitle className="text-2xl font-semibold text-[#0b0f1c]">Welcome back to Truely</CardTitle>
+        <p className="text-sm text-[#313754]/70">We found an account using {email}. Sign in to continue checkout.</p>
       </div>
-      <div>
-        <label htmlFor="password" className="text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-midnight/50">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          required
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="mt-2 w-full rounded-2xl border border-lilac/60 bg-white px-4 py-3 text-sm font-medium text-midnight placeholder:text-midnight/40 focus:border-iris focus:outline-none focus:ring-2 focus:ring-iris/40"
-        />
+      <div className="mt-6 space-y-4">
+        <Button
+          variant="outline"
+          type="button"
+          disabled
+          className="w-full justify-center rounded-full text-sm uppercase tracking-[0.3em] text-[#313754]/70"
+        >
+          Continue with Google
+        </Button>
+        <div className="relative flex items-center gap-3 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#313754]/40">
+          <Separator className="flex-1 bg-[#d0d5ff]/60" />
+          <span>or with password</span>
+          <Separator className="flex-1 bg-[#d0d5ff]/60" />
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="checkout-password">Password</Label>
+            <Input
+              id="checkout-password"
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Enter your password"
+            />
+          </div>
+          {error && <p className="text-sm font-semibold text-[#8a1f3d]">{error}</p>}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full justify-center rounded-full text-sm uppercase tracking-[0.3em]"
+            disabled={loading || !password}
+          >
+            {loading ? "Signing in…" : "Sign in & continue"}
+          </Button>
+        </form>
       </div>
-      {error && <p className="text-sm font-semibold text-fuchsia">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-full bg-gradient-to-r from-iris to-fuchsia px-5 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white shadow-[0_18px_60px_rgba(123,60,237,0.45)] transition hover:shadow-[0_22px_80px_rgba(123,60,237,0.6)] disabled:opacity-50"
-      >
-        {loading ? "Signing in…" : "Log in"}
-      </button>
-    </form>
+    </Card>
   );
 }
 
@@ -221,40 +338,63 @@ function PaymentStep({ draft, email }: { draft: Draft; email: string }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-[32px] border border-lilac/50 bg-white p-6 shadow-[0_22px_80px_rgba(18,7,50,0.18)]">
-      <PaymentElement options={{ layout: "tabs" }} />
-      {error && <p className="text-sm font-semibold text-fuchsia">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading || !stripe || !elements}
-        className="w-full rounded-full bg-gradient-to-r from-iris to-fuchsia px-6 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white shadow-[0_20px_70px_rgba(123,60,237,0.5)] transition hover:shadow-[0_24px_90px_rgba(123,60,237,0.65)] disabled:opacity-50"
-      >
-        {loading ? "Processing…" : "Complete purchase"}
-      </button>
-      <p className="text-center text-xs font-medium uppercase tracking-[0.3em] text-midnight/40">Secure checkout with Stripe</p>
-    </form>
+    <Card className="border-0 bg-white p-6 shadow-[0_28px_90px_rgba(20,24,53,0.14)]">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-3">
+          <Badge className="w-fit bg-[#ebefff] text-[#1a1f38]">Step 4 · Payment</Badge>
+          <CardTitle className="text-2xl font-semibold text-[#0b0f1c]">Make payment</CardTitle>
+          <p className="text-sm text-[#313754]/70">Cards, wallets, and local methods supported by Stripe.</p>
+        </div>
+        <PaymentElement options={{ layout: "tabs" }} />
+        {error ? <p className="text-sm font-semibold text-[#8a1f3d]">{error}</p> : null}
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full justify-center rounded-full text-sm uppercase tracking-[0.3em]"
+          disabled={loading || !stripe || !elements}
+        >
+          {loading ? "Processing…" : "Complete purchase"}
+        </Button>
+        <p className="text-center text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#313754]/50">
+          Secure checkout with Stripe
+        </p>
+      </form>
+    </Card>
   );
 }
 
-function CheckoutContent({ email }: { email: string }) {
-  const params = useSearchParams();
-  const [draft, setDraft] = useState<Draft | null>(null);
+function CheckoutContent({ email, draft, attempt }: { email: string; draft: Draft | null; attempt: number }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [activeDraft, setActiveDraft] = useState<Draft | null>(draft);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requiresLogin, setRequiresLogin] = useState(false);
-
-  const serializedParams = params.toString();
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const currentParams = new URLSearchParams(serializedParams);
-    const parsed = parseDraft(currentParams);
-    if (!parsed) {
-      setError("Your checkout session expired. Start again from the plans page.");
+    setActiveDraft(draft);
+  }, [draft]);
+
+  useEffect(() => {
+    if (!draft) {
       setLoading(false);
+      setError("Select a destination and plan to start checkout.");
+      setClientSecret(null);
+      setRequiresLogin(false);
       return;
     }
+
+    if (!email) {
+      setLoading(false);
+      setError(null);
+      setClientSecret(null);
+      setRequiresLogin(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
     const startCheckout = async () => {
       try {
@@ -262,7 +402,7 @@ function CheckoutContent({ email }: { email: string }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            draft: parsed,
+            draft,
             email,
           }),
         });
@@ -270,40 +410,66 @@ function CheckoutContent({ email }: { email: string }) {
         if (!response.ok) {
           throw new Error(json.error ?? "Checkout failed. Please refresh and try again.");
         }
-        setDraft(json.draft ?? parsed);
+        if (cancelled) return;
+        setActiveDraft(json.draft ?? draft);
         setClientSecret(json.clientSecret ?? null);
         setRequiresLogin(Boolean(json.requiresLogin));
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Checkout failed. Please refresh and try again.");
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Checkout failed. Please refresh and try again.");
+          setClientSecret(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     void startCheckout();
-  }, [serializedParams, email, refreshKey]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [draft, email, attempt, refreshKey]);
+
+  if (!draft) {
+    return (
+      <Card className="border-0 bg-[#fff2f2] p-6 text-sm font-semibold text-[#8a1f3d] shadow-none">
+        Select a plan to begin checkout.
+      </Card>
+    );
+  }
+
+  if (!email) {
+    return (
+      <Card className="border-0 bg-[#f5f7ff] p-6 text-sm text-[#313754]/70 shadow-none">
+        Enter your email above to unlock the next steps.
+      </Card>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="rounded-[32px] border border-lilac/40 bg-white p-6 text-sm text-midnight/60 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">
+      <Card className="border-0 bg-[#f5f7ff] p-6 text-sm text-[#313754]/70 shadow-none">
         Setting up your secure checkout…
-      </div>
+      </Card>
     );
   }
 
-  if (error || !draft) {
+  if (error) {
     return (
-      <div className="space-y-4 rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">
-        <p>{error ?? "Unable to start checkout."}</p>
-        <Link href="/" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.32em] text-white">
+      <Card className="border-0 bg-[#fff2f2] p-6 text-sm text-[#8a1f3d] shadow-none">
+        <p>{error}</p>
+        <Link href="/" className="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.3em] text-[#8a1f3d] underline">
           Return home
         </Link>
-      </div>
+      </Card>
     );
   }
 
-  if (requiresLogin) {
+  if (requiresLogin && email) {
     return (
       <LoginPanel
         email={email}
@@ -318,18 +484,64 @@ function CheckoutContent({ email }: { email: string }) {
     );
   }
 
-  if (!clientSecret || !stripePromise) {
+  if (!clientSecret || !stripePromise || !activeDraft) {
     return (
-      <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">
+      <Card className="border-0 bg-[#fff2f2] p-6 text-sm text-[#8a1f3d] shadow-none">
         Checkout isn’t available right now. Please try again later.
-      </div>
+      </Card>
     );
   }
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "flat" } }}>
-      <PaymentStep draft={draft} email={email} />
+      <PaymentStep draft={activeDraft} email={email} />
     </Elements>
+  );
+}
+
+function CheckoutShell({ email, onEmailSubmit }: { email: string; onEmailSubmit: (value: string) => void }) {
+  const params = useSearchParams();
+  const draft = parseDraft(params);
+  const [attempt, setAttempt] = useState(0);
+
+  const handleEmailSubmit = (value: string) => {
+    onEmailSubmit(value);
+    setAttempt((count) => count + 1);
+  };
+
+  return (
+    <div className="space-y-5">
+      {draft ? <PlanSummaryCard draft={draft} /> : (
+        <Card className="border-0 bg-[#fff2f2] p-6 text-sm font-semibold text-[#8a1f3d] shadow-none">
+          Select a plan from the home page to begin checkout.
+        </Card>
+      )}
+      <EmailStep email={email} onSubmit={handleEmailSubmit} />
+      <CheckoutContent email={email} draft={draft} attempt={attempt} />
+    </div>
+  );
+}
+
+function CheckoutPanel({ email, onEmailSubmit }: { email: string; onEmailSubmit: (value: string) => void }) {
+  return (
+    <div className="w-full max-w-md rounded-[36px] border border-white/15 bg-white text-[#0b0f1c] shadow-[0_40px_120px_rgba(15,28,70,0.35)]">
+      <div className="flex items-center justify-between border-b border-[#d0d5ff]/60 px-6 py-5">
+        <div>
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-[#313754]/60">Checkout</p>
+          <p className="text-xl font-semibold text-[#0b0f1c]">Complete your purchase</p>
+        </div>
+        <Badge className="bg-[#ebefff] text-[#1a1f38]">Secure</Badge>
+      </div>
+      <div className="space-y-5 px-6 py-6">
+        <Suspense
+          fallback={
+            <Card className="border-0 bg-[#f5f7ff] p-6 text-sm text-[#313754]/70 shadow-none">Preparing checkout…</Card>
+          }
+        >
+          <CheckoutShell email={email} onEmailSubmit={onEmailSubmit} />
+        </Suspense>
+      </div>
+    </div>
   );
 }
 
@@ -341,84 +553,67 @@ export default function CheckoutPage() {
     return new URLSearchParams(window.location.search).get("email") ?? "";
   });
 
+  const handleEmailSubmit = (value: string) => {
+    setEmail(value);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (value) {
+        params.set("email", value);
+      } else {
+        params.delete("email");
+      }
+      const query = params.toString();
+      const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState(null, "", next);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-cloud text-midnight">
-      <header className="border-b border-lilac/40 bg-white/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-iris to-fuchsia text-base font-extrabold text-white shadow-[0_18px_45px_rgba(123,60,237,0.4)]">
-              FM
+    <div className="relative min-h-screen overflow-hidden bg-[#02061a] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(83,96,255,0.4),transparent_55%),linear-gradient(180deg,#02061a_0%,#05102b_60%,#02061a_100%)]" aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1600&q=80')] bg-cover bg-center opacity-25"
+        aria-hidden
+      />
+      <div className="relative flex min-h-screen flex-col">
+        <header className="px-6 py-6">
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between text-white">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#74e4ff] via-[#5360ff] to-[#6f3] text-sm font-extrabold tracking-[0.3em]">
+                TR
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-white/70">Truely Switchless</span>
+                <span className="text-lg font-semibold">Secure checkout</span>
+              </div>
+            </Link>
+            <div className="hidden items-center gap-6 text-sm font-semibold uppercase tracking-[0.3em] text-white/70 sm:flex">
+              <span>Support</span>
+              <span>Help center</span>
+              <span>Destinations</span>
             </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-[0.65rem] font-semibold uppercase tracking-[0.34em] text-midnight/50">Flex Mobile</span>
-              <span className="text-lg font-semibold text-midnight">Secure checkout</span>
-            </div>
-          </Link>
-          <span className="text-xs font-semibold uppercase tracking-[0.32em] text-midnight/60">Secure checkout</span>
-        </div>
-      </header>
-      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-24 pt-16 sm:px-6 lg:flex-row lg:items-start lg:gap-14 lg:px-8">
-        <div className="flex-1 space-y-6">
-          <div className="rounded-[36px] border border-lilac/40 bg-white p-8 shadow-[0_28px_90px_rgba(18,7,50,0.15)]">
-            <h1 className="text-3xl font-semibold text-midnight">Quick checkout</h1>
-            <p className="mt-2 text-base text-midnight/70">
-              Enter your email to get started. We’ll send plan details and your QR instantly after payment.
+          </div>
+        </header>
+
+        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 pb-16 pt-10 text-white sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+          <div className="max-w-xl space-y-6">
+            <Badge className="bg-white/15 text-white">Stacked checkout</Badge>
+            <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">Unlimited internet that travels with you</h1>
+            <p className="text-lg text-white/80">
+              You’re moments away from connecting like a local. Confirm your plan, verify your email, and pay without leaving this panel.
             </p>
-            <div className="mt-6 space-y-4">
-              <label htmlFor="email" className="text-[0.62rem] font-semibold uppercase tracking-[0.32em] text-midnight/50">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                className="w-full rounded-2xl border border-lilac/60 bg-white px-4 py-3 text-sm font-medium text-midnight placeholder:text-midnight/40 focus:border-iris focus:outline-none focus:ring-2 focus:ring-iris/40"
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setEmail(value);
-                  if (typeof window !== "undefined") {
-                    const params = new URLSearchParams(window.location.search);
-                    if (value) {
-                      params.set("email", value);
-                    } else {
-                      params.delete("email");
-                    }
-                    const query = params.toString();
-                    const next = query ? `${window.location.pathname}?${query}` : window.location.pathname;
-                    window.history.replaceState(null, "", next);
-                  }
-                }}
-              />
+            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
+              <span>Instant QR delivery</span>
+              <Separator orientation="vertical" className="hidden h-4 w-px bg-white/40 sm:block" />
+              <span>Hotspot friendly</span>
+              <Separator orientation="vertical" className="hidden h-4 w-px bg-white/40 sm:block" />
+              <span>Best network guarantee</span>
             </div>
           </div>
 
-          <Suspense fallback={<div className="rounded-[32px] border border-lilac/40 bg-white p-6 text-sm text-midnight/60 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">Preparing payment…</div>}>
-            <CheckoutContent email={email} />
-          </Suspense>
-        </div>
-
-        <div className="lg:w-[28rem]">
-          <Suspense fallback={<div className="rounded-[32px] border border-lilac/40 bg-white p-6 text-sm text-midnight/60 shadow-[0_18px_60px_rgba(18,7,50,0.15)]">Loading summary…</div>}>
-            <Summary />
-          </Suspense>
-        </div>
-      </main>
+          <CheckoutPanel email={email} onEmailSubmit={handleEmailSubmit} />
+        </main>
+      </div>
     </div>
   );
-}
-
-function Summary() {
-  const params = useSearchParams();
-  const draft = parseDraft(params);
-
-  if (!draft) {
-    return (
-      <div className="rounded-[32px] border border-fuchsia/40 bg-fuchsia/10 p-6 text-sm text-fuchsia">
-        Select a destination and plan to start checkout.
-      </div>
-    );
-  }
-
-  return <CheckoutSummary draft={draft} />;
 }

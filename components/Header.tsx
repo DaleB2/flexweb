@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-import styles from "./Header.module.css";
-
 const navItems = [
   { href: "#features", label: "Features" },
   { href: "#destinations", label: "Destinations" },
