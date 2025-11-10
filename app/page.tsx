@@ -1,3 +1,4 @@
+import CheckoutFlow from "@/components/CheckoutFlow";
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
@@ -139,6 +140,7 @@ function formatCountryFromSelection(selection: CheckoutSelection | null): EsimCo
 }
 
 export default function HomePage() {
+  return <CheckoutFlow />;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
