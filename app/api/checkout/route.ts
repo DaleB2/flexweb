@@ -66,11 +66,37 @@ export async function POST(request: NextRequest) {
 
     if (supabaseAdmin) {
       try {
-        const { data: authMatch, error: authError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-        if (authError && authError.status !== 404) {
-          console.error("Supabase admin lookup error", authError);
+        const normalizedEmail = email.toLowerCase();
+        let page = 1;
+        let continueSearch = true;
+
+        while (continueSearch) {
+          const { data: authMatch, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+            page,
+            perPage: 200,
+          });
+
+          if (authError && authError.status !== 404) {
+            console.error("Supabase admin lookup error", authError);
+            break;
+          }
+
+          const matchedUser = authMatch?.users?.find(
+            (user) => user.email?.toLowerCase() === normalizedEmail,
+          );
+
+          if (matchedUser) {
+            knownUserId = matchedUser.id;
+            break;
+          }
+
+          const hasPagination = authMatch && "nextPage" in authMatch;
+          if (!hasPagination || !authMatch?.nextPage) {
+            continueSearch = false;
+          } else {
+            page = authMatch.nextPage;
+          }
         }
-        knownUserId = authMatch?.user?.id ?? null;
       } catch (error) {
         console.error("Failed to check Supabase auth for email", error);
       }

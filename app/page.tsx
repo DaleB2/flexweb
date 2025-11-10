@@ -2,328 +2,192 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Header from "@/components/Header";
-import PlanSearch from "@/components/PlanSearch";
+import PlanCard from "@/components/PlanCard";
+import { Badge } from "@/components/ui/badge";
+
+const heroBenefits = [
+  "Best network guarantee",
+  "Switchless activation",
+  "Hotspot & tethering",
+  "Visa, Apple Pay & Google Pay",
+];
 
 const highlightStats = [
-  { label: "Destinations", value: "200+" },
+  { label: "Countries", value: "200+" },
   { label: "Activation", value: "Instant" },
-  { label: "Devices", value: "Phones & tablets" },
+  { label: "Support", value: "24/7" },
 ];
 
 const featureCards = [
   {
-    title: "Single global eSIM",
-    description: "Stay connected as you hop countries without swapping plastic SIMs or managing multiple plans.",
+    title: "Roam like a local",
+    description: "Unlimited data on top partner networks in 200+ destinations with no surprise charges.",
   },
   {
-    title: "Pay-as-you-go flexibility",
-    description: "Top up your balance whenever you need more data. Your plan pauses when you do.",
+    title: "Keep your number",
+    description: "Stay on iMessage and WhatsApp with your existing SIM while Flex powers your data.",
   },
   {
-    title: "No expiration stress",
-    description: "Unused data stays on your profile so you can reconnect on your next trip without re-purchasing.",
+    title: "Five minute setup",
+    description: "Purchase, scan the QR we email instantly, and you’re live before wheels down.",
   },
   {
-    title: "Global app calling",
-    description: "Keep in touch with local numbers through the Flex app wherever you’re travelling.",
+    title: "One account everywhere",
+    description: "Manage all of your eSIMs, top ups, and receipts from a single Truely-style dashboard.",
   },
 ];
 
 const destinationShowcase = [
   "United States",
   "United Kingdom",
-  "Turkey",
-  "Thailand",
-  "Switzerland",
-  "Spain",
-  "Saudi Arabia",
-  "Portugal",
-  "New Zealand",
-  "Greece",
   "Japan",
+  "Spain",
+  "Thailand",
+  "Portugal",
   "Germany",
-];
-
-const comparisons = [
-  { label: "Single global eSIM", flex: true, roaming: false, tourist: false },
-  { label: "Pay-as-you-go flexibility", flex: true, roaming: false, tourist: false },
-  { label: "No expiration", flex: true, roaming: false, tourist: false },
-  { label: "Fixed data plans", flex: true, roaming: true, tourist: true },
-  { label: "Affordable pricing", flex: true, roaming: false, tourist: false },
-  { label: "International voice calls", flex: true, roaming: true, tourist: false },
-];
-
-const faqs = [
-  {
-    question: "What is an eSIM?",
-    answer:
-      "An eSIM is a digital SIM that lets you activate a cellular plan without a physical SIM card. Scan the QR code we send after checkout to get online instantly.",
-  },
-  {
-    question: "How do I set it up?",
-    answer:
-      "Setup is simple: purchase a plan, scan the QR delivered to your inbox, and follow the on-device steps. The Flex app guides you if you need help.",
-  },
-  {
-    question: "Can I keep my number?",
-    answer:
-      "Yes. Your existing phone number stays active for calls and messaging while your Flex eSIM handles data.",
-  },
-  {
-    question: "Is hotspotting allowed?",
-    answer: "Absolutely. Share data with laptops, tablets, and friends without extra fees.",
-  },
-];
-
-const heroStats = [
-  { label: "Destinations ready", value: "190+" },
-  { label: "Activation time", value: "60 sec" },
-  { label: "Support crew", value: "24/7" },
-];
-
-const networkSignals = [
-  { icon: "⚡", label: "Instant QR delivery" },
-  { icon: "📶", label: "Partnered local towers" },
-  { icon: "🛡️", label: "Secure Stripe checkout" },
-  { icon: "🧭", label: "Arrival city briefings" },
-];
-
-const whyHighlights = [
-  {
-    title: "City breaks and sabbaticals",
-    description: "Stay powered for Lisbon workweeks or Seoul neon nights with plans sized to the day.",
-    icon: "🛫",
-  },
-  {
-    title: "Cultural respect built in",
-    description: "Each activation bundles etiquette intel from residents so you blend in with ease.",
-    icon: "🪩",
-  },
-  {
-    title: "Data without guesswork",
-    description: "Pricing is locked in the currency you pick. No roaming shocks or hidden add ons.",
-    icon: "💳",
-  },
-  {
-    title: "Hotspot friendly",
-    description: "Share connectivity with your travel crew or laptop without throttling surprises.",
-    icon: "📡",
-  },
-];
-
-const steps = [
-  "Pick the destination and plan variant that matches your stay length.",
-  "Checkout through Stripe with taxes and currency confirmed up front.",
-  "Scan the emailed QR when you land and toggle roaming to go live.",
-];
-
-const communityStories = [
-  {
-    body: "Flex kept our founders online through Nairobi demo day week. The cultural brief calmed first time travelers.",
-    author: "Sasha · Accelerator lead",
-  },
-  {
-    body: "During Sao Paulo fashion prep the hotspot handled streaming and uploads without a hitch.",
-    author: "Renata · Creative director",
-  },
+  "Mexico",
+  "Turkey",
+  "Italy",
+  "France",
+  "Greece",
 ];
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen overflow-hidden text-white">
+    <div className="relative min-h-screen overflow-hidden">
       <Header />
 
-      <main className="flex flex-col gap-24 pb-32 pt-28">
+      <main className="relative z-10 flex flex-col gap-28 pb-28 pt-28">
         <section className="relative isolate overflow-hidden">
-          <div className="absolute inset-0 bg-heroDepth" />
-          <div className="absolute -top-32 right-0 h-[32rem] w-[32rem] rounded-full bg-heroOrb blur-3xl" />
-          <div className="relative mx-auto flex max-w-6xl flex-col gap-12 px-4 py-20 sm:px-6 lg:flex-row lg:items-center lg:px-8">
-            <div className="flex-1 space-y-6">
-              <span className="inline-flex items-center gap-3 rounded-full bg-white/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.34em] text-white/70">
-                Flex Mobile
-              </span>
-              <h1 className="text-4xl font-semibold leading-tight sm:text-[3.1rem]">
-                The reliable eSIM for explorers.
+          <div className="absolute inset-0">
+            <Image
+              src="https://images.unsplash.com/photo-1522149374751-76d3c53f625a?auto=format&fit=crop&w=1800&q=80"
+              alt="Blue sky with clouds"
+              fill
+              priority
+              className="-z-20 object-cover"
+            />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#042461]/95 via-[#0b3d99]/80 to-[#021131]/95" />
+            <div className="absolute inset-x-0 top-10 -z-10 h-80 bg-[radial-gradient(circle_at_top,_rgba(74,185,255,0.55),_transparent_70%)] blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 pb-12 sm:px-6 lg:flex-row lg:items-center lg:px-8">
+            <div className="flex-1 space-y-6 text-white">
+              <Badge className="bg-white/20 text-white">Truely Switchless</Badge>
+              <h1 className="text-4xl font-semibold leading-tight sm:text-[3.4rem]">
+                Unlimited internet that travels with you.
               </h1>
-              <p className="max-w-xl text-lg text-white/80">
-                Stay connected like a local at home or abroad. Instant setup, flexible data, and coverage in 200+ countries—all inspired by the Roamless experience you love.
+              <p className="max-w-xl text-lg text-white/85">
+                Truely Switchless keeps you online in over 200 countries. Pick a destination, preview unlimited plans, and glide through the stacked checkout just like the original site.
               </p>
-              <div className="flex flex-wrap items-center gap-4">
-                <Link
-                  href="#plans"
-                  className="rounded-full bg-gradient-to-r from-iris to-fuchsia px-8 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white shadow-[0_22px_70px_rgba(123,60,237,0.55)] transition hover:shadow-[0_26px_85px_rgba(123,60,237,0.7)]"
-                >
-                  Choose a plan
-                </Link>
-                <Link
-                  href="#destinations"
-                  className="rounded-full border border-white/20 px-8 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white/80 transition hover:border-white hover:text-white"
-                >
-                  Explore destinations
-                </Link>
+              <div className="flex flex-wrap gap-2">
+                {heroBenefits.map((benefit) => (
+                  <span
+                    key={benefit}
+                    className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-white/80"
+                  >
+                    {benefit}
+                  </span>
+                ))}
               </div>
-              <div className="flex flex-wrap gap-6 text-sm text-white/70">
+              <div className="flex flex-wrap items-center gap-8 pt-6 text-white/80">
                 {highlightStats.map((stat) => (
                   <div key={stat.label} className="space-y-1">
-                    <p className="text-2xl font-semibold text-white">{stat.value}</p>
-                    <p className="text-xs uppercase tracking-[0.34em]">{stat.label}</p>
+                    <p className="text-3xl font-semibold text-white">{stat.value}</p>
+                    <p className="text-xs uppercase tracking-[0.36em]">{stat.label}</p>
                   </div>
                 ))}
               </div>
+              <div className="flex flex-wrap gap-4 pt-4">
+                <Link
+                  href="#plans"
+                  className="rounded-full bg-truelyLime px-10 py-3 text-sm font-semibold uppercase tracking-[0.36em] text-truelyNavy shadow-[0_24px_70px_rgba(156,255,0,0.35)] transition hover:shadow-[0_28px_90px_rgba(156,255,0,0.5)]"
+                >
+                  View packages
+                </Link>
+                <Link
+                  href="#destinations"
+                  className="rounded-full border border-white/30 px-10 py-3 text-sm font-semibold uppercase tracking-[0.36em] text-white/80 transition hover:border-white hover:text-white"
+                >
+                  Popular regions
+                </Link>
+              </div>
             </div>
 
-            <div className="relative flex-1">
-              <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-fuchsia/40 blur-3xl" />
-              <div className="relative overflow-hidden rounded-[40px] border border-white/10 bg-white/10 p-6 backdrop-blur">
-                <Image
-                  src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=900&q=80"
-                  alt="Traveler holding phone"
-                  width={900}
-                  height={1200}
-                  className="h-[28rem] w-full rounded-[28px] object-cover"
-                />
+            <div className="flex w-full max-w-lg shrink-0 flex-col gap-6">
+              <div className="rounded-[40px] border border-white/15 bg-white/10 p-1 shadow-[0_30px_120px_rgba(4,17,49,0.45)] backdrop-blur">
+                <PlanCard />
               </div>
             </div>
           </div>
         </section>
 
-        <section id="features" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="space-y-6 text-center">
-            <h2 className="text-3xl font-semibold">Made to move with you</h2>
-            <p className="mx-auto max-w-2xl text-base text-white/80">
-              Setup once, top up on the go, and stay online in over 200 destinations with one global eSIM.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            {featureCards.map((feature) => (
-              <div key={feature.title} className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-left shadow-[0_18px_50px_rgba(18,7,50,0.3)]">
-                <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
-                <p className="mt-3 text-sm text-white/70">{feature.description}</p>
+        <section id="plans" className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[36px] border border-white/10 bg-white/5 p-10 text-white shadow-[0_32px_120px_rgba(4,25,70,0.35)] backdrop-blur">
+            <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div className="space-y-5">
+                <Badge className="bg-white/20 text-white">How it works</Badge>
+                <h2 className="text-3xl font-semibold">Stacked steps, zero friction.</h2>
+                <p className="text-base text-white/80">
+                  Select your country above, explore available plans in the sheet, and continue into the Truely-style checkout flow where email verification, login, and payment live in one stack.
+                </p>
+                <ul className="space-y-3 text-sm text-white/75">
+                  <li>• Country picker opens the slider sheet for data + duration.</li>
+                  <li>• Plan summary keeps totals front-and-center before checkout.</li>
+                  <li>• Checkout cards stack email → login → payment seamlessly.</li>
+                </ul>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="plans" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div className="space-y-5">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.34em] text-white/70">
-                Plans for every destination
-              </span>
-              <h2 className="text-3xl font-semibold">Pick your stopover and download data instantly.</h2>
-              <p className="text-base text-white/80">
-                We surface the best unlimited plans for each country and price them in your currency. No hidden fees, no airport kiosks.
-              </p>
-              <ul className="space-y-3 text-sm text-white/70">
-                <li>• Instant QR delivery with setup instructions.</li>
-                <li>• Works across phones, tablets, and hotspots.</li>
-                <li>• Friendly support if you need a hand getting online.</li>
-              </ul>
+              <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
+                <PlanCard />
+              </div>
             </div>
-            <PlanCard />
           </div>
         </section>
 
-        <section id="destinations" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[36px] border border-white/10 bg-white/5 p-8 shadow-[0_18px_50px_rgba(18,7,50,0.3)]">
+        <section id="features" className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[36px] border border-white/10 bg-white text-truelyNavy shadow-[0_36px_110px_rgba(5,25,71,0.35)]">
+            <div className="grid gap-6 p-10 sm:grid-cols-2">
+              {featureCards.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="rounded-[28px] border border-truelySky/30 bg-white/60 p-6 text-left shadow-[0_18px_60px_rgba(7,25,67,0.12)]"
+                >
+                  <h3 className="text-xl font-semibold text-truelyNavy">{feature.title}</h3>
+                  <p className="mt-3 text-sm text-truelyNavy/70">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="destinations" className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[36px] border border-white/10 bg-white/5 p-10 text-white shadow-[0_32px_110px_rgba(4,25,70,0.35)] backdrop-blur">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-3xl font-semibold">200+ destinations</h2>
-                <p className="mt-2 max-w-xl text-base text-white/80">
-                  Change countries, not SIMs. Flex switches between partners and networks automatically.
+              <div className="space-y-3">
+                <Badge className="bg-white/20 text-white">200+ regions</Badge>
+                <h2 className="text-3xl font-semibold">Pick a hotspot, land connected.</h2>
+                <p className="text-base text-white/75">
+                  Flex automatically pairs you with the strongest partner networks in each location, so you can work, stream, and share without roaming shock.
                 </p>
               </div>
               <Link
                 href="/destinations"
-                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold uppercase tracking-[0.32em] text-white/80 transition hover:border-white hover:text-white"
+                className="rounded-full border border-white/30 px-8 py-3 text-sm font-semibold uppercase tracking-[0.36em] text-white/80 transition hover:border-white hover:text-white"
               >
-                See all destinations
+                See destination list
               </Link>
             </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {destinationShowcase.map((destination) => (
-                <div key={destination} className="rounded-[24px] border border-white/10 bg-white/10 px-5 py-6 text-white/80">
-                  <p className="text-lg font-semibold text-white">{destination}</p>
-                  <p className="text-xs uppercase tracking-[0.32em] text-white/60">Included with Flex</p>
+                <div
+                  key={destination}
+                  className="rounded-[28px] border border-white/15 bg-white/10 px-5 py-6 text-white shadow-[0_18px_70px_rgba(4,25,70,0.35)]"
+                >
+                  <p className="text-lg font-semibold">{destination}</p>
+                  <p className="text-xs uppercase tracking-[0.34em] text-white/60">Unlimited data partner</p>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[36px] border border-white/10 bg-white text-midnight shadow-[0_28px_90px_rgba(18,7,50,0.35)]">
-            <div className="border-b border-lilac/40 p-8 text-center">
-              <h2 className="text-3xl font-semibold text-midnight">Why Flex Mobile is simply better</h2>
-              <p className="mt-3 text-base text-midnight/70">
-                Compare Flex with traditional roaming and tourist SIMs.
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[36rem] divide-y divide-lilac/40 text-left text-sm">
-                <thead>
-                  <tr className="text-[0.65rem] uppercase tracking-[0.32em] text-midnight/50">
-                    <th className="px-6 py-4">Comparison</th>
-                    <th className="px-6 py-4 text-center">Flex Mobile</th>
-                    <th className="px-6 py-4 text-center">Travel roaming</th>
-                    <th className="px-6 py-4 text-center">Tourist SIMs</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-lilac/30">
-                  {comparisons.map((row) => (
-                    <tr key={row.label} className="text-midnight/80">
-                      <td className="px-6 py-4 font-semibold">{row.label}</td>
-                      <td className="px-6 py-4 text-center text-iris">{row.flex ? "✓" : "—"}</td>
-                      <td className="px-6 py-4 text-center text-midnight/50">{row.roaming ? "✓" : "—"}</td>
-                      <td className="px-6 py-4 text-center text-midnight/50">{row.tourist ? "✓" : "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-            <div className="lg:w-1/3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.32em] text-white/70">
-                Need help?
-              </span>
-              <h2 className="mt-4 text-3xl font-semibold">Answers before takeoff</h2>
-              <p className="mt-3 text-base text-white/75">
-                Learn how Flex keeps you connected and what to expect during activation.
-              </p>
-            </div>
-            <div className="grid flex-1 gap-6 sm:grid-cols-2">
-              {faqs.map((faq) => (
-                <div key={faq.question} className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-[0_18px_50px_rgba(18,7,50,0.3)]">
-                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/60">{faq.question}</p>
-                  <p className="mt-3 text-sm text-white/75">{faq.answer}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-4xl rounded-[36px] border border-white/10 bg-gradient-to-r from-iris to-fuchsia px-8 py-12 text-center shadow-[0_26px_90px_rgba(123,60,237,0.6)]">
-          <h2 className="text-3xl font-semibold">Ready to roam?</h2>
-          <p className="mt-3 text-base text-white/80">
-            Choose your destination, pick a plan, and checkout in under a minute.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Link
-              href="#plans"
-              className="rounded-full bg-white px-8 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-iris transition hover:bg-white/90"
-            >
-              Start planning
-            </Link>
-            <Link
-              href="/checkout"
-              className="rounded-full border border-white/60 px-8 py-3 text-sm font-semibold uppercase tracking-[0.34em] text-white/90 transition hover:border-white hover:text-white"
-            >
-              Secure checkout
-            </Link>
           </div>
         </section>
       </main>
