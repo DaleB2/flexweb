@@ -189,31 +189,31 @@ export default function PlanCard() {
   }, [activeCountry, activePlan, countryName, currency, markupPct, router, totalCents]);
 
   return (
-    <Card className="relative overflow-hidden rounded-[32px] border border-truelySky/40 bg-white p-8 text-truelyNavy shadow-[0_40px_140px_rgba(5,25,71,0.18)]">
-      <div className="absolute inset-x-0 -top-48 h-64 bg-[radial-gradient(circle_at_top,_rgba(11,141,244,0.25),_transparent_70%)]" aria-hidden />
+    <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#ffffff] via-[#f5f8ff] to-[#eef1ff]/80 p-8 text-[#10152b] shadow-[0_40px_120px_rgba(16,21,43,0.18)]">
+      <div className="absolute inset-x-0 -top-48 h-64 bg-[radial-gradient(circle_at_top,_rgba(116,228,255,0.32),_transparent_70%)]" aria-hidden />
       <CardHeader className="relative space-y-4 p-0">
-        <Badge className="self-start bg-truelyNavy text-white">Truely Switchless</Badge>
-        <CardTitle className="text-4xl font-semibold leading-tight text-truelyNavy">
+        <Badge className="self-start bg-[#0f1c46] text-white">Truely Switchless</Badge>
+        <CardTitle className="text-4xl font-semibold leading-tight text-[#0b0f1c]">
           Unlimited internet that travels with you.
         </CardTitle>
-        <p className="max-w-xl text-base text-truelyNavy/70">
+        <p className="max-w-xl text-base text-[#1f2544]/70">
           Pick a destination, preview partner plans, and continue to checkout in a stack that mirrors Truely’s flow.
         </p>
       </CardHeader>
       <CardContent className="relative mt-8 space-y-8 p-0">
         <CountrySelector countries={countries} selected={countryCode} onSelect={handleSelectCountry} />
 
-        <div className="grid gap-4 rounded-3xl border border-truelySky/30 bg-truelyMint/40 p-6">
+        <div className="grid gap-4 rounded-3xl border border-[#d0d5ff]/60 bg-white/80 p-6 backdrop-blur">
           {reassurance.map((item) => (
             <div key={item.title} className="flex flex-col gap-1">
-              <p className="text-sm font-semibold text-truelyNavy">{item.title}</p>
-              <p className="text-xs font-medium uppercase tracking-[0.28em] text-truelyNavy/50">{item.description}</p>
+              <p className="text-sm font-semibold text-[#0b0f1c]">{item.title}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.28em] text-[#1f2544]/50">{item.description}</p>
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col gap-4 rounded-3xl bg-gradient-to-r from-truelyNavy to-[#031236] px-6 py-6 text-white shadow-[0_32px_90px_rgba(3,18,54,0.45)]">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.34em] text-white/70">
+        <div className="flex flex-col gap-4 rounded-3xl bg-[#0f1c46] px-6 py-6 text-white shadow-[0_32px_90px_rgba(15,28,70,0.45)]">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.34em] text-white/60">
             <span>Next step</span>
             <span>Email verification</span>
           </div>
@@ -236,18 +236,18 @@ export default function PlanCard() {
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <Button
             size="lg"
-            className="w-full justify-between rounded-full px-8 text-sm uppercase tracking-[0.28em] bg-none bg-truelyLime text-truelyNavy shadow-[0_24px_60px_rgba(156,255,0,0.35)] hover:bg-truelyLime/90"
+            className="w-full justify-between rounded-full px-8 text-sm uppercase tracking-[0.28em]"
             onClick={handleViewPackages}
             disabled={!countryCode}
           >
             <span>View packages</span>
-            <span className="text-truelyNavy/70">{countryCode ? "Step 1 of 3" : "Select a country"}</span>
+            <span className="text-white/70">{countryCode ? "Step 1 of 3" : "Select a country"}</span>
           </Button>
           <SheetContent>
             <div className="space-y-6">
-              <div className="rounded-2xl border border-truelySky/40 bg-truelyMint/40 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-truelyNavy/50">Destination</p>
-                <p className="mt-2 flex items-center gap-3 text-lg font-semibold text-truelyNavy">
+              <div className="rounded-2xl border border-[#d0d5ff]/60 bg-[#f5f7ff] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/60">Destination</p>
+                <p className="mt-2 flex items-center gap-3 text-lg font-semibold text-[#0b0f1c]">
                   <span className="text-2xl" aria-hidden>
                     {activeCountry && activeCountry.length === 2
                       ? String.fromCodePoint(
@@ -257,30 +257,30 @@ export default function PlanCard() {
                   </span>
                   {countryName || "Select a country"}
                 </p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-truelyNavy/50">
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/50">
                   Unlimited data network partners
                 </p>
               </div>
 
               {isLoadingPlans ? (
                 <div className="space-y-5">
-                  <div className="h-5 w-40 animate-pulse rounded-full bg-truelySky/30" />
-                  <div className="h-32 animate-pulse rounded-3xl bg-truelySky/20" />
-                  <div className="h-44 animate-pulse rounded-3xl bg-truelySky/20" />
+                  <div className="h-5 w-40 animate-pulse rounded-full bg-[#e4e8ff]" />
+                  <div className="h-32 animate-pulse rounded-3xl bg-[#eef1ff]" />
+                  <div className="h-44 animate-pulse rounded-3xl bg-[#eef1ff]" />
                 </div>
               ) : error ? (
-                <Card className="border-truelySky/30 bg-white p-6 text-sm font-semibold text-truelyNavy shadow-none">
+                <Card className="border-[#ffb3c0]/60 bg-[#fff2f6] p-6 text-sm font-semibold text-[#8a1f3d] shadow-none">
                   {error}
                 </Card>
               ) : plans.length > 0 ? (
                 <Tabs defaultValue="unlimited" className="w-full">
-                  <TabsList className="flex justify-start gap-2 rounded-full border border-truelySky/20 bg-white p-1">
-                    <TabsTrigger value="unlimited" className="flex-1 rounded-full text-xs uppercase tracking-[0.3em] text-truelyNavy">
+                  <TabsList className="flex justify-start gap-2 rounded-full border-0 bg-[#f5f7ff] p-1">
+                    <TabsTrigger value="unlimited" className="flex-1 rounded-full text-xs uppercase tracking-[0.3em]">
                       Unlimited data
                     </TabsTrigger>
                     <TabsTrigger
                       value="payg"
-                      className="flex-1 rounded-full text-xs uppercase tracking-[0.3em] text-truelyNavy/40"
+                      className="flex-1 rounded-full text-xs uppercase tracking-[0.3em] text-[#313754]/50"
                       disabled
                     >
                       Pay per GB
@@ -296,36 +296,36 @@ export default function PlanCard() {
                     />
                   </TabsContent>
                   <TabsContent value="payg">
-                    <Card className="border-dashed border-truelySky/30 bg-white/80 p-6 text-center text-sm text-truelyNavy/60 shadow-none">
+                    <Card className="border-dashed border-[#d0d5ff]/60 bg-white/80 p-6 text-center text-sm text-[#313754]/70 shadow-none">
                       Pay-as-you-go options are coming soon.
                     </Card>
                   </TabsContent>
                 </Tabs>
               ) : (
-                <Card className="border-dashed border-truelySky/30 bg-white/80 p-6 text-center text-sm text-truelyNavy/60 shadow-none">
+                <Card className="border-dashed border-[#d0d5ff]/60 bg-white/80 p-6 text-center text-sm text-[#313754]/70 shadow-none">
                   Pick a country to load partner plans.
                 </Card>
               )}
 
-              <div className="rounded-3xl border border-truelySky/30 bg-white p-6 shadow-[0_20px_70px_rgba(5,25,71,0.12)]">
-                <div className="flex items-center justify-between text-sm font-semibold text-truelyNavy/70">
+              <div className="rounded-3xl border border-[#d0d5ff]/60 bg-white p-6 shadow-[0_16px_60px_rgba(20,24,53,0.12)]">
+                <div className="flex items-center justify-between text-sm font-semibold text-[#313754]/70">
                   <span>{activePlan ? formatPeriodLabel(activePlan.periodDays) : "Plan"}</span>
-                  <span className="text-xs uppercase tracking-[0.3em] text-truelySky">Stripe secure</span>
+                  <span className="text-xs uppercase tracking-[0.3em] text-[#74e4ff]">Stripe secure</span>
                 </div>
-                <p className="mt-4 text-3xl font-semibold text-truelyNavy">
+                <p className="mt-4 text-3xl font-semibold text-[#0b0f1c]">
                   {totalCents && activePlan ? formatCurrency(totalCents, currency) : "Choose a plan"}
                 </p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-truelyNavy/50">
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#313754]/60">
                   {activePlan
                     ? `From ${formatCurrency(Math.ceil(totalCents! / activePlan.periodDays), currency)} per day`
                     : "Select a stay length"}
                 </p>
-                <p className="mt-4 text-xs font-medium text-truelyNavy/70">
+                <p className="mt-4 text-xs font-medium text-[#313754]/70">
                   Continue to email verification next. Existing Truely users will be prompted to sign in.
                 </p>
                 <Button
                   size="lg"
-                  className="mt-6 w-full justify-center rounded-full text-sm uppercase tracking-[0.3em] bg-none bg-truelyLime text-truelyNavy shadow-[0_24px_60px_rgba(156,255,0,0.35)] hover:bg-truelyLime/90"
+                  className="mt-6 w-full justify-center rounded-full text-sm uppercase tracking-[0.3em]"
                   onClick={handleContinue}
                   disabled={!activePlan || !totalCents}
                 >
@@ -338,7 +338,7 @@ export default function PlanCard() {
           </SheetContent>
         </Sheet>
 
-        <p className="text-center text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-truelyNavy/50">
+        <p className="text-center text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#313754]/50">
           Trusted by 150k+ users. Taxes included.
         </p>
       </CardFooter>
