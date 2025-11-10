@@ -9,7 +9,7 @@ const navItems = [
 
 export default function Header() {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#020d2b]/70 backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-truelyNavy/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-white sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-truelySky to-truelyLime text-base font-extrabold text-[#031236] shadow-[0_18px_45px_rgba(74,185,255,0.35)]">

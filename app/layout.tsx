@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${poppins.variable} font-pop`}>
-      <body className="min-h-screen bg-gradient-to-br from-midnight via-plum to-midnight text-white" suppressHydrationWarning>
+      <body className="min-h-screen bg-heroGrad text-white" suppressHydrationWarning>
         {children}
       </body>
     </html>
