@@ -13,6 +13,11 @@ module.exports = {
         moon: "#F5F2FF",
         blush: "#FF9AC0",
         cloud: "#FDFBFF",
+        truelyBlue: "#0b8df4",
+        truelyNavy: "#051947",
+        truelyLime: "#9cff00",
+        truelyMint: "#b5ffe1",
+        truelySky: "#4ab9ff",
       },
       boxShadow: {
         card: "0 25px 70px rgba(19,6,43,0.28)",
