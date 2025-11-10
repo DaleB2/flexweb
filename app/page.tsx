@@ -52,6 +52,37 @@ const destinationShowcase = [
   "Greece",
 ];
 
+const comparisons = [
+  { label: "Single global eSIM", flex: true, roaming: false, tourist: false },
+  { label: "Pay-as-you-go flexibility", flex: true, roaming: false, tourist: false },
+  { label: "No expiration", flex: true, roaming: false, tourist: false },
+  { label: "Fixed data plans", flex: true, roaming: true, tourist: true },
+  { label: "Affordable pricing", flex: true, roaming: false, tourist: false },
+  { label: "International voice calls", flex: true, roaming: true, tourist: false },
+];
+
+const faqs = [
+  {
+    question: "What is an eSIM?",
+    answer:
+      "An eSIM is a digital SIM that lets you activate a cellular plan without a physical SIM card. Scan the QR code we send after checkout to get online instantly.",
+  },
+  {
+    question: "How do I set it up?",
+    answer:
+      "Setup is simple: purchase a plan, scan the QR delivered to your inbox, and follow the on-device steps. The Flex app guides you if you need help.",
+  },
+  {
+    question: "Can I keep my number?",
+    answer:
+      "Yes. Your existing phone number stays active for calls and messaging while your Flex eSIM handles data.",
+  },
+  {
+    question: "Is hotspotting allowed?",
+    answer: "Absolutely. Share data with laptops, tablets, and friends without extra fees.",
+  },
+];
+
 export default function HomePage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -136,6 +167,10 @@ export default function HomePage() {
                   <li>• Plan summary keeps totals front-and-center before checkout.</li>
                   <li>• Checkout cards stack email → login → payment seamlessly.</li>
                 </ul>
+              </div>
+              <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
+                <PlanCard />
+              </div>
               </div>
               <div className="rounded-[32px] border border-white/15 bg-white/10 p-1 shadow-[0_26px_90px_rgba(4,25,70,0.35)] backdrop-blur">
                 <PlanCard />

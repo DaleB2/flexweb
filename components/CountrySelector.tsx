@@ -64,6 +64,7 @@ export default function CountrySelector({ countries, selected, onSelect, helperT
   }, [countries]);
 
   const helperClassName = helperTone === "dark" ? "text-white/70" : "text-truelyNavy/70";
+  const helperClassName = helperTone === "dark" ? "text-white/70" : "text-[#313754]/70";
 
   return (
     <div className="space-y-3">
