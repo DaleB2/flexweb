@@ -7,11 +7,8 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Sheet = DialogPrimitive.Root;
-
 const SheetTrigger = DialogPrimitive.Trigger;
-
 const SheetClose = DialogPrimitive.Close;
-
 const SheetPortal = DialogPrimitive.Portal;
 
 const SheetOverlay = React.forwardRef<
@@ -20,7 +17,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 bg-[#0b0f1c]/40 backdrop-blur-sm", className)}
+    className={cn("fixed inset-0 bg-black/60 backdrop-blur-sm", className)}
     {...props}
   />
 ));
@@ -30,22 +27,25 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     side?: "left" | "right";
+    title?: React.ReactNode;
   }
->(({ className, side = "right", children, ...props }, ref) => (
+>(({ className, side = "right", title, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-y-0 z-50 flex w-full flex-col border border-l-0 border-[#d0d5ff]/60 bg-white shadow-[0_32px_120px_rgba(20,24,53,0.25)] focus:outline-none sm:max-w-xl",
+        "fixed inset-y-0 z-50 flex w-full flex-col border border-white/10 bg-[#0b1424]/95 text-white shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl focus:outline-none sm:max-w-lg",
         side === "right" ? "right-0" : "left-0",
         className,
       )}
       {...props}
     >
-      <div className="flex items-center justify-between border-b border-[#d0d5ff]/60 px-6 py-4">
-        <DialogPrimitive.Title className="text-lg font-semibold text-[#10152b]">Checkout</DialogPrimitive.Title>
-        <SheetClose className="rounded-full p-2 text-[#313754]/60 transition hover:bg-[#f4f7ff] hover:text-[#10152b]">
+      <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+        <DialogPrimitive.Title className="text-base font-semibold tracking-wide text-white/90">
+          {title}
+        </DialogPrimitive.Title>
+        <SheetClose className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white">
           <X className="h-5 w-5" />
         </SheetClose>
       </div>
@@ -56,7 +56,7 @@ const SheetContent = React.forwardRef<
 SheetContent.displayName = DialogPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("space-y-1 text-left", className)} {...props} />
+  <div className={cn("space-y-2 text-left", className)} {...props} />
 );
 
 const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

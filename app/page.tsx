@@ -1,5 +1,5 @@
-import CheckoutFlow from "@/components/CheckoutFlow";
+import { StackedJourney } from "@/components/stacked/StackedJourney";
 
 export default function HomePage() {
-  return <CheckoutFlow />;
+  return <StackedJourney />;
 }

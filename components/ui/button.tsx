@@ -6,15 +6,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent disabled:pointer-events-none disabled:opacity-60",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-[#74e4ff] via-[#53f] to-[#6f3] text-white shadow-[0_12px_45px_rgba(84,111,255,0.45)] hover:shadow-[0_16px_60px_rgba(84,111,255,0.55)]",
-        outline:
-          "border border-[#d0d5ff]/60 bg-white text-[#0b0f1c] hover:border-[#74e4ff]/60 hover:text-[#14182a]",
-        ghost: "text-[#0b0f1c] hover:bg-[#f4f7ff]",
+          "bg-gradient-to-r from-iris via-indigo-500 to-fuchsia text-white shadow-[0_16px_50px_rgba(91,43,234,0.45)] transition-transform duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-px hover:shadow-[0_20px_60px_rgba(91,43,234,0.55)]",
+        subtle:
+          "border border-white/20 bg-white/10 text-white backdrop-blur hover:border-white/30 hover:bg-white/15",
+        ghost: "text-white/80 hover:bg-white/10",
       },
       size: {
         default: "h-11 px-6",
@@ -34,17 +34,9 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
-        {...props}
-      />
-    );
-  },
-);
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, ...props }, ref) => {
+  return <button ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />;
+});
 Button.displayName = "Button";
 
 export { Button, buttonVariants };

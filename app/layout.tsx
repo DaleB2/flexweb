@@ -1,25 +1,18 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
 import "./globals.css";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
-  display: "swap",
-});
+import { ToastHost } from "@/components/ui/use-toast";
 
 export const metadata: Metadata = {
-  title: "Flex Mobile — Reliable global eSIMs",
+  title: "Flex eSIM — Truely-inspired checkout",
   description:
-    "Stay online in 200+ destinations with instant eSIM activation, transparent pricing, and a checkout inspired by Roamless.",
+    "Explore destinations, pay securely, and activate your travel eSIM through a Truely-style stacked card journey.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${poppins.variable} font-pop`}>
-      <body className="min-h-screen bg-heroGrad text-white" suppressHydrationWarning>
-        {children}
+    <html lang="en" className="antialiased">
+      <body className="min-h-screen bg-aurora text-white">
+        <ToastHost>{children}</ToastHost>
       </body>
     </html>
   );
