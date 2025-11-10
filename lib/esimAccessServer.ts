@@ -26,12 +26,12 @@ async function esimRequest<T>(path: string, init: RequestInit = {}): Promise<T> 
   const headers: HeadersInit = {
     Accept: "application/json",
     ...(init.body ? { "Content-Type": "application/json" } : {}),
+    Authorization: accessCode?.startsWith("Bearer ") ? accessCode : `Bearer ${accessCode}`,
+    "X-API-Key": accessCode,
+    ...(secret ? { "X-API-Secret": secret } : {}),
     Authorization: `Bearer ${accessCode}`,
     "X-API-Key": accessCode,
   };
-  if (partnerId) {
-    headers["X-Partner-ID"] = partnerId;
-  }
 
   const response = await fetch(url, {
     ...init,
@@ -50,6 +50,23 @@ async function esimRequest<T>(path: string, init: RequestInit = {}): Promise<T> 
   return (await response.json()) as T;
 }
 
+interface ApiEnvelope {
+  success?: boolean | string;
+  errorCode?: string | number | null;
+  errorMessage?: string | null;
+  errorMsg?: string | null;
+}
+
+function ensureSuccess(envelope: ApiEnvelope) {
+  if (typeof envelope.success === "undefined") return;
+  const isSuccess = typeof envelope.success === "string" ? envelope.success === "true" : envelope.success;
+  if (isSuccess) return;
+
+  const code = envelope.errorCode ? ` ${envelope.errorCode}` : "";
+  const message = envelope.errorMessage ?? envelope.errorMsg ?? "Unknown error";
+  throw new Error(`eSIM Access responded with${code}: ${message}`);
+}
+
 interface RawCountry {
   iso2?: string;
   iso?: string;
@@ -61,15 +78,27 @@ interface RawCountry {
   flag?: string;
 }
 
-interface RawCountriesResponse {
+interface RawCountriesResponse extends ApiEnvelope {
   countries?: RawCountry[];
   data?: RawCountry[];
   result?: RawCountry[];
+  obj?: { countryList?: RawCountry[] } | RawCountry[];
+  countryList?: RawCountry[];
 }
 
 export async function loadEsimCountries(): Promise<EsimCountry[]> {
-  const data = await esimRequest<RawCountriesResponse>(process.env.ESIM_ACCESS_COUNTRIES_PATH ?? "/catalog/countries");
-  const countries = data.countries ?? data.data ?? data.result ?? [];
+  const data = await esimRequest<RawCountriesResponse>("api/v1/open/location/country/list", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  ensureSuccess(data);
+  const countries =
+    data.countries ??
+    data.data ??
+    data.result ??
+    data.countryList ??
+    (Array.isArray(data.obj) ? data.obj : data.obj?.countryList) ??
+    [];
   return countries
     .map((country) => {
       const code = country.iso2 ?? country.iso ?? country.countryCode ?? country.code;
@@ -102,29 +131,41 @@ interface RawPlan {
   wholesaleCents?: number;
   currency?: string;
   currency_code?: string;
+  currencyCode?: string;
   validity_days?: number;
   validityDays?: number;
   periodDays?: number;
+  duration?: number;
+  duration_unit?: string;
+  durationUnit?: string;
   data_gb?: number;
   dataGb?: number;
   data?: number;
   data_label?: string;
   dataLabel?: string;
+  volume?: number;
+  volume_unit?: string;
+  volumeUnit?: string;
+  volumeLabel?: string;
+  volume_label?: string;
   category?: PlanCategory;
   type?: string;
+  activeType?: string;
 }
 
-interface RawPlansResponse {
+interface RawPlansResponse extends ApiEnvelope {
   plans?: RawPlan[];
   data?: RawPlan[];
   packages?: RawPlan[];
+  packageList?: RawPlan[];
+  obj?: { packageList?: RawPlan[] } | RawPlan[];
 }
 
 function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant | null {
   const slug = plan.slug ?? plan.planSlug ?? plan.packageCode ?? plan.package_code ?? plan.package;
   if (!slug) return null;
 
-  const currency = (plan.currency ?? plan.currency_code ?? "USD").toUpperCase();
+  const currency = (plan.currency ?? plan.currency_code ?? plan.currencyCode ?? "USD").toUpperCase();
   const wholesaleField =
     plan.wholesaleCents ?? plan.wholesale_cents ?? plan.price ?? plan.wholesale ?? plan.retailPrice ?? plan.retail_price ?? 0;
   const wholesaleCents = Math.round(wholesaleField > 100 ? wholesaleField : wholesaleField * 100);
@@ -133,19 +174,66 @@ function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant |
     return null;
   }
 
-  const periodDays = plan.periodDays ?? plan.validityDays ?? plan.validity_days ?? 30;
-  const dataGb = plan.dataGb ?? plan.data_gb ?? (typeof plan.data === "number" ? plan.data : undefined);
+  let periodDays = plan.periodDays ?? plan.validityDays ?? plan.validity_days ?? 0;
+  const rawDuration = plan.duration;
+  const durationUnit = plan.durationUnit ?? plan.duration_unit;
+  if (!periodDays && rawDuration && durationUnit) {
+    const normalized = durationUnit.toLowerCase();
+    if (normalized.startsWith("day")) {
+      periodDays = rawDuration;
+    } else if (normalized.startsWith("hour")) {
+      periodDays = Math.max(1, Math.ceil(rawDuration / 24));
+    } else if (normalized.startsWith("week")) {
+      periodDays = rawDuration * 7;
+    } else if (normalized.startsWith("month")) {
+      periodDays = rawDuration * 30;
+    }
+  }
+  if (!periodDays) {
+    periodDays = 30;
+  }
+
+  let dataGb = plan.dataGb ?? plan.data_gb ?? (typeof plan.data === "number" ? plan.data : undefined);
+  const volumeUnit = plan.volumeUnit ?? plan.volume_unit;
+  if (typeof plan.volume === "number") {
+    if (volumeUnit?.toLowerCase().startsWith("mb")) {
+      dataGb = plan.volume / 1024;
+    } else if (volumeUnit?.toLowerCase().startsWith("gb")) {
+      dataGb = plan.volume;
+    }
+  }
+
+  const formattedVolume = (() => {
+    if (plan.volumeLabel ?? plan.volume_label) {
+      return plan.volumeLabel ?? plan.volume_label;
+    }
+    if (typeof plan.volume === "number") {
+      if (volumeUnit?.toLowerCase().startsWith("mb")) {
+        const gbValue = plan.volume / 1024;
+        return gbValue >= 1 ? `${gbValue.toFixed(gbValue >= 10 ? 0 : 1)} GB` : `${plan.volume} MB`;
+      }
+      if (volumeUnit?.toLowerCase().startsWith("gb")) {
+        return `${plan.volume} GB`;
+      }
+    }
+    return undefined;
+  })();
 
   const dataLabel =
     plan.dataLabel ??
     plan.data_label ??
+    formattedVolume ??
     plan.display_name ??
     plan.title ??
     plan.name ??
     (typeof dataGb === "number" && dataGb > 0 ? `${dataGb} GB` : "Unlimited");
 
-  const planCategory: PlanCategory =
-    plan.category ?? (dataLabel.toLowerCase().includes("unlimited") ? "unlimited" : "metered");
+  const planCategory: PlanCategory = (() => {
+    if (plan.category) return plan.category;
+    const type = (plan.type ?? plan.activeType ?? "").toLowerCase();
+    if (type.includes("unlimit")) return "unlimited";
+    return dataLabel.toLowerCase().includes("unlimit") ? "unlimited" : "metered";
+  })();
 
   const markupSource = plan.retail_price ?? plan.retailPrice;
   const markupPct = Number.isFinite(markupSource)
@@ -178,10 +266,18 @@ function computeMarkupFromRetail(wholesaleCents: number, rawRetail: number): num
 
 export async function loadEsimPlans(countryCode: string): Promise<EsimPlanVariant[]> {
   if (!countryCode) return [];
-  const data = await esimRequest<RawPlansResponse>(
-    `${process.env.ESIM_ACCESS_PLANS_PATH ?? "/catalog/countries"}/${countryCode}/plans`,
-  );
-  const plans = data.plans ?? data.packages ?? data.data ?? [];
+  const data = await esimRequest<RawPlansResponse>("api/v1/open/package/list", {
+    method: "POST",
+    body: JSON.stringify({ locationCode: countryCode }),
+  });
+  ensureSuccess(data);
+  const plans =
+    data.plans ??
+    data.packages ??
+    data.data ??
+    data.packageList ??
+    (Array.isArray(data.obj) ? data.obj : data.obj?.packageList) ??
+    [];
   return plans
     .map((plan) => buildPlanVariant(countryCode, plan))
     .filter(Boolean) as EsimPlanVariant[];
@@ -196,7 +292,7 @@ interface CreateOrderPayload {
   metadata?: Record<string, string>;
 }
 
-interface RawOrderResponse {
+interface RawOrderResponse extends ApiEnvelope {
   iccid?: string;
   sim?: { iccid?: string; qr?: string; activation_code?: string; activationCode?: string; activation_url?: string; activationUrl?: string };
   qr?: string;
@@ -218,17 +314,21 @@ export interface IssuedEsimOrder {
 export async function issueEsimOrder(payload: CreateOrderPayload): Promise<IssuedEsimOrder> {
   const body = {
     plan_slug: payload.planSlug,
+    packageCode: payload.planSlug,
+    package_code: payload.planSlug,
     country_code: payload.countryCode,
+    locationCode: payload.countryCode,
     email: payload.email,
     customer_name: payload.customerName,
     iccid: payload.iccid,
     metadata: payload.metadata,
   };
 
-  const response = await esimRequest<RawOrderResponse>(process.env.ESIM_ACCESS_ORDER_PATH ?? "/orders", {
+  const response = await esimRequest<RawOrderResponse>("api/v1/open/esim/order", {
     method: "POST",
     body: JSON.stringify(body),
   });
+  ensureSuccess(response);
 
   const iccid = response.iccid ?? response.sim?.iccid;
   if (!iccid) {
