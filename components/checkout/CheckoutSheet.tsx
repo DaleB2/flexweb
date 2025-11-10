@@ -3,6 +3,9 @@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { CheckoutFlow } from "./CheckoutFlow";
 
+const SHEET_CONTENT_CLASSES =
+  "w-full max-w-full border-l border-white/10 bg-[#050c1a]/95 text-white backdrop-blur-xl sm:w-[560px] sm:max-w-[560px]";
+
 interface CheckoutSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -16,13 +19,11 @@ export function CheckoutSheet({ open, onOpenChange, onPlanAnother }: CheckoutShe
         side="right"
         title="Flex Checkout"
         aria-describedby="flex-checkout-description"
-        className="w-full max-w-full border-l border-white/10 bg-[#050c1a]/95 text-white backdrop-blur-xl sm:w-[560px] sm:max-w-[560px]"
+        className={SHEET_CONTENT_CLASSES}
       >
         <span id="flex-checkout-description" className="sr-only">
           Flex eSIM checkout flow with stacked cards for destination, plan, account, payment, and confirmation steps.
         </span>
-        className="w-full max-w-full border-l border-white/10 bg-[#050c1a]/95 text-white backdrop-blur-xl sm:w-[560px] sm:max-w-[560px]"
-      >
         <CheckoutFlow
           onClose={() => onOpenChange(false)}
           onPlanAnother={onPlanAnother}
