@@ -1,5 +1,5 @@
-import { StackedJourney } from "@/components/stacked/StackedJourney";
+import { CheckoutExperience } from "@/components/checkout/CheckoutExperience";
 
 export default function HomePage() {
-  return <StackedJourney />;
+  return <CheckoutExperience />;
 }

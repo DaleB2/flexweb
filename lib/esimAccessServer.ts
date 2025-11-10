@@ -2,17 +2,21 @@ import "server-only";
 
 import type { EsimCountry, EsimPlanVariant, PlanCategory } from "@/lib/esimAccess";
 
-const baseUrl = process.env.ESIM_ACCESS_API_BASE_URL?.replace(/\/$/, "");
-const apiKey = process.env.ESIM_ACCESS_API_KEY;
-const partnerId = process.env.ESIM_ACCESS_PARTNER_ID;
-const defaultMarkupPct = Number.parseFloat(process.env.ESIM_ACCESS_DEFAULT_MARKUP_PCT ?? "20");
+const baseUrl = (process.env.ESIM_API_BASE ?? "https://api.esimaccess.com").replace(/\/$/, "");
+const accessCode = process.env.ESIM_ACCESS_CODE?.trim();
+const secret = process.env.ESIM_SECRET?.trim();
+const partnerId = process.env.ESIM_ACCESS_PARTNER_ID?.trim();
+const defaultMarkupPct = Number.parseFloat(process.env.DEFAULT_MARKUP_PCT ?? "20");
 
 function requireConfig() {
   if (!baseUrl) {
-    throw new Error("ESIM_ACCESS_API_BASE_URL is not configured");
+    throw new Error("ESIM_API_BASE is not configured");
   }
-  if (!apiKey) {
-    throw new Error("ESIM_ACCESS_API_KEY is not configured");
+  if (!accessCode) {
+    throw new Error("ESIM_ACCESS_CODE is not configured");
+  }
+  if (!secret) {
+    throw new Error("ESIM_SECRET is not configured");
   }
 }
 
@@ -22,8 +26,8 @@ async function esimRequest<T>(path: string, init: RequestInit = {}): Promise<T> 
   const headers: HeadersInit = {
     Accept: "application/json",
     ...(init.body ? { "Content-Type": "application/json" } : {}),
-    Authorization: `Bearer ${apiKey}`,
-    "X-API-Key": apiKey,
+    Authorization: `Bearer ${accessCode}`,
+    "X-API-Key": accessCode,
   };
   if (partnerId) {
     headers["X-Partner-ID"] = partnerId;
