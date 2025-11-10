@@ -30,6 +30,23 @@ interface PlansResponse {
   plans: EsimPlanVariant[];
 }
 
+export interface EsimPackageSummary {
+  id: string;
+  planCode: string;
+  name: string;
+  dataLabel: string;
+  days: number;
+  unlimited: boolean;
+  price: {
+    amount: number;
+    currency: string;
+  };
+}
+
+interface PackagesResponse {
+  packages: EsimPackageSummary[];
+}
+
 async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     ...init,
@@ -58,4 +75,10 @@ export async function fetchPlans(countryCode: string): Promise<EsimPlanVariant[]
   if (!countryCode) return [];
   const data = await fetchJson<PlansResponse>(`/api/esim/plans?countryCode=${encodeURIComponent(countryCode)}`);
   return data.plans;
+}
+
+export async function fetchPackages(countryCode: string): Promise<EsimPackageSummary[]> {
+  if (!countryCode) return [];
+  const data = await fetchJson<PackagesResponse>(`/api/esim/packages?country=${encodeURIComponent(countryCode)}`);
+  return data.packages;
 }

@@ -1,132 +1,161 @@
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { dispatchMakeOrder } from "@/lib/make";
+import { issueEsimOrder } from "@/lib/esimAccessServer";
+import { sendOrderReadyEmail } from "@/lib/email";
 import { getStripeClient } from "@/lib/stripe";
+import { getSupabaseServiceClient } from "@/lib/supabaseServer";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? "";
-
-function parseDraft(rawDraft?: string | null) {
-  if (!rawDraft) return undefined;
-  try {
-    return JSON.parse(rawDraft) as Record<string, unknown>;
-  } catch (error) {
-    console.warn("Unable to parse draft metadata", error);
-    return undefined;
-  }
-}
-
-function normalizeNumber(value: unknown) {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }
-  return undefined;
-}
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error("STRIPE_WEBHOOK_SECRET is not configured");
-    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+    console.warn("Stripe webhook secret missing. Skipping processing.");
+    return NextResponse.json({ received: true });
   }
 
-  const signature = request.headers.get("stripe-signature");
+  const stripe = getStripeClient();
+  const signature = headers().get("stripe-signature");
   const rawBody = await request.text();
+
+  if (!signature) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
 
   let event: Stripe.Event;
 
   try {
-    if (!signature) {
-      throw new Error("Missing Stripe signature header");
-    }
-    const stripe = getStripeClient();
-    event = await stripe.webhooks.constructEventAsync(rawBody, signature, webhookSecret);
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (error) {
-    console.error("Stripe webhook signature verification failed", error);
+    console.error("Invalid Stripe signature", error);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  try {
-    if (event.type === "payment_intent.succeeded") {
-      const stripe = getStripeClient();
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      const metadataEntries = Object.entries(paymentIntent.metadata ?? {});
-      const metadata: Record<string, string> = Object.fromEntries(
-        metadataEntries.map(([key, value]) => [key, value ?? ""]),
-      );
-
-      const alreadyNotified = metadata.make_notified === "1";
-      const draft = parseDraft(metadata.draft);
-
-      const charges = (
-        (paymentIntent as Stripe.PaymentIntent & { charges?: Stripe.ApiList<Stripe.Charge> }).charges?.data ?? []
-      ) as Stripe.Charge[];
-      const firstCharge = charges[0];
-      const billingDetails = firstCharge?.billing_details;
-
-      const email = (metadata.email ?? paymentIntent.receipt_email ?? billingDetails?.email ?? "").trim();
-      const customerName = metadata.customer_name ?? paymentIntent.shipping?.name ?? billingDetails?.name ?? null;
-      const amount = paymentIntent.amount_received ?? paymentIntent.amount ?? 0;
-      const currency = paymentIntent.currency?.toUpperCase() ?? metadata.currency?.toUpperCase() ?? "USD";
-
-      const planSku = metadata.package_code ?? (typeof draft?.packageCode === "string" ? draft.packageCode : undefined);
-      const planSlug = metadata.slug ?? (typeof draft?.slug === "string" ? draft.slug : undefined);
-      const dataGb = normalizeNumber(draft?.dataGb);
-      const periodDays = normalizeNumber(draft?.periodDays);
-      const countryCode = metadata.country_code ?? (typeof draft?.countryCode === "string" ? draft.countryCode : undefined);
-      const countryName =
-        typeof draft?.country === "string"
-          ? draft.country
-          : metadata.country ?? metadata.country_name ?? null;
-
-      if (!alreadyNotified) {
-        await dispatchMakeOrder({
-          payment_intent_id: paymentIntent.id,
-          email,
-          amount,
-          currency,
-          customer_name: customerName,
-          order_id: metadata.order_id ?? null,
-          draft,
-          plan_sku: planSku,
-          plan_slug: planSlug,
-          data_gb: dataGb,
-          period_days: periodDays,
-          country_code: countryCode,
-          country_name: countryName ?? null,
-        });
-
-        await stripe.paymentIntents.update(paymentIntent.id, {
-          metadata: {
-            ...metadata,
-            make_notified: "1",
-          },
-        });
-      }
-    } else if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      if (session.payment_intent) {
-        // In case Checkout is ever used, retrieve the PaymentIntent to ensure Make receives the payload.
-        const stripe = getStripeClient();
-        const paymentIntent = await stripe.paymentIntents.retrieve(
-          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent.id,
-        );
-        await stripe.paymentIntents.update(paymentIntent.id, {
-          metadata: {
-            ...(paymentIntent.metadata ?? {}),
-            session_completed: "1",
-          },
-        });
-      }
-    }
-  } catch (error) {
-    console.error("Stripe webhook processing failed", error);
-    return NextResponse.json({ error: "Webhook handling failed" }, { status: 500 });
+  if (event.type === "payment_intent.succeeded") {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    await handlePaymentSucceeded(intent);
   }
 
   return NextResponse.json({ received: true });
+}
+
+async function handlePaymentSucceeded(intent: Stripe.PaymentIntent) {
+  const email = (intent.receipt_email ?? intent.metadata?.email ?? "").trim().toLowerCase();
+  const countryCode = intent.metadata?.country_code ?? "";
+  const packageCode = intent.metadata?.package_code ?? "";
+  const amountCents = Number.parseInt(intent.metadata?.amount_cents ?? `${intent.amount}`, 10);
+  const currency = (intent.metadata?.currency ?? intent.currency ?? "usd").toUpperCase();
+
+  if (!email || !countryCode || !packageCode) {
+    console.warn("Missing metadata for payment intent", intent.id);
+    return;
+  }
+
+  let supabase: ReturnType<typeof getSupabaseServiceClient> | null = null;
+  try {
+    supabase = getSupabaseServiceClient();
+  } catch (error) {
+    console.warn("Supabase service client unavailable", error);
+  }
+
+  let userId: string | null = null;
+
+  if (supabase) {
+    try {
+      const { data: existing } = await supabase.auth.admin.listUsers({ email });
+      userId = existing?.users?.[0]?.id ?? null;
+      if (!userId) {
+        const { data: created, error: createError } = await supabase.auth.admin.createUser({ email, email_confirm: false });
+        if (createError) {
+          throw createError;
+        }
+        userId = created.user?.id ?? null;
+        if (userId) {
+          const fallbackHost = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL;
+          const inviteRedirect = process.env.SUPABASE_INVITE_REDIRECT_URL ??
+            (fallbackHost ? `${fallbackHost.replace(/\/$/, "")}/account` : undefined);
+          try {
+            await supabase.auth.admin.generateLink({
+              type: "magiclink",
+              email,
+              options: inviteRedirect ? { redirectTo: inviteRedirect } : undefined,
+            });
+          } catch (error) {
+            console.error("Failed to generate Supabase invite link", error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Supabase user management failed", error);
+    }
+  }
+
+  let orderId: string | null = null;
+  if (supabase && userId) {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .insert({
+          user_id: userId,
+          status: "processing",
+          country: countryCode,
+          package_code: packageCode,
+          amount: amountCents,
+          currency,
+          stripe_payment_intent: intent.id,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      orderId = data?.id ?? null;
+    } catch (error) {
+      console.error("Failed to create order record", error);
+    }
+  }
+
+  try {
+    const esim = await issueEsimOrder({
+      planSlug: packageCode,
+      countryCode,
+      email,
+      metadata: {
+        stripe_payment_intent: intent.id,
+      },
+    });
+
+    if (supabase && orderId) {
+      try {
+        await supabase
+          .from("orders")
+          .update({
+            status: "fulfilled",
+          })
+          .eq("id", orderId);
+
+        await supabase.from("esims").insert({
+          order_id: orderId,
+          iccid: esim.iccid,
+          activation_code: esim.activationCode ?? null,
+          qr_url_or_svg: esim.qrCodeUrl,
+          status: "active",
+          raw: esim as unknown as Record<string, unknown>,
+        });
+      } catch (error) {
+        console.error("Failed to update Supabase order", error);
+      }
+    }
+
+    await sendOrderReadyEmail({ to: email, iccid: esim.iccid, qrUrl: esim.qrCodeUrl });
+  } catch (error) {
+    console.error("Provisioning failed", error);
+    if (supabase && orderId) {
+      await supabase
+        .from("orders")
+        .update({ status: "failed" })
+        .eq("id", orderId);
+    }
+  }
 }
