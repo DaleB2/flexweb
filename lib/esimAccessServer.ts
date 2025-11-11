@@ -1,5 +1,7 @@
 import "server-only";
 
+import crypto from "node:crypto";
+
 import type { EsimCountry, EsimPlanVariant, PlanCategory } from "@/lib/esimAccess";
 
 const baseUrl = (process.env.ESIM_API_BASE ?? "https://api.esimaccess.com").replace(/\/$/, "");
@@ -20,26 +22,64 @@ function requireConfig() {
   }
 }
 
-async function esimRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+interface EsimRequestInit extends Omit<RequestInit, "body"> {
+  body?: unknown;
+}
+
+function buildSignatureHeaders(body: string): HeadersInit {
+  if (!accessCode || !secret) {
+    throw new Error("eSIM Access credentials are not configured");
+  }
+
+  const timestamp = Date.now().toString();
+  const requestId = crypto.randomUUID();
+  const signData = `${timestamp}${requestId}${accessCode}${body}`;
+  const signature = crypto.createHmac("sha256", secret).update(signData).digest("hex").toLowerCase();
+
+  const headers: Record<string, string> = {
+    "RT-AccessCode": accessCode,
+    "RT-Timestamp": timestamp,
+    "RT-RequestID": requestId,
+    "RT-Signature": signature,
+  };
+
+  if (partnerId) {
+    headers["RT-PartnerID"] = partnerId;
+  }
+
+  return headers;
+}
+
+async function esimRequest<T>(path: string, init: EsimRequestInit = {}): Promise<T> {
   requireConfig();
   const url = `${baseUrl}/${path.replace(/^\//, "")}`;
+  const { body: rawBody, headers: initHeaders, cache, ...rest } = init;
+
+  const hasBody = typeof rawBody !== "undefined";
+  const serializedBody =
+    typeof rawBody === "string"
+      ? rawBody
+      : hasBody
+        ? JSON.stringify(rawBody ?? {})
+        : undefined;
+  const authCode = accessCode!;
+  const signatureHeaders = buildSignatureHeaders(serializedBody ?? "");
+  const authorization = authCode.startsWith("Bearer ") ? authCode : `Bearer ${authCode}`;
+
   const headers: HeadersInit = {
     Accept: "application/json",
-    ...(init.body ? { "Content-Type": "application/json" } : {}),
-    Authorization: accessCode?.startsWith("Bearer ") ? accessCode : `Bearer ${accessCode}`,
-    "X-API-Key": accessCode,
-    ...(secret ? { "X-API-Secret": secret } : {}),
-    Authorization: `Bearer ${accessCode}`,
-    "X-API-Key": accessCode,
+    ...(serializedBody ? { "Content-Type": "application/json" } : {}),
+    Authorization: authorization,
+    "X-API-Key": authCode,
+    ...signatureHeaders,
+    ...(initHeaders ?? {}),
   };
 
   const response = await fetch(url, {
-    ...init,
-    headers: {
-      ...headers,
-      ...(init.headers ?? {}),
-    },
-    cache: "no-store",
+    ...rest,
+    headers,
+    body: serializedBody,
+    cache: cache ?? "no-store",
   });
 
   if (!response.ok) {
@@ -89,7 +129,7 @@ interface RawCountriesResponse extends ApiEnvelope {
 export async function loadEsimCountries(): Promise<EsimCountry[]> {
   const data = await esimRequest<RawCountriesResponse>("api/v1/open/location/country/list", {
     method: "POST",
-    body: JSON.stringify({}),
+    body: {},
   });
   ensureSuccess(data);
   const countries =
@@ -268,7 +308,7 @@ export async function loadEsimPlans(countryCode: string): Promise<EsimPlanVarian
   if (!countryCode) return [];
   const data = await esimRequest<RawPlansResponse>("api/v1/open/package/list", {
     method: "POST",
-    body: JSON.stringify({ locationCode: countryCode }),
+    body: { locationCode: countryCode },
   });
   ensureSuccess(data);
   const plans =
@@ -326,7 +366,7 @@ export async function issueEsimOrder(payload: CreateOrderPayload): Promise<Issue
 
   const response = await esimRequest<RawOrderResponse>("api/v1/open/esim/order", {
     method: "POST",
-    body: JSON.stringify(body),
+    body,
   });
   ensureSuccess(response);
 
