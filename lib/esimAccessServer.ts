@@ -1,12 +1,13 @@
 import "server-only";
 
+import crypto from "node:crypto";
+
 import type { EsimCountry, EsimPlanVariant, PlanCategory } from "@/lib/esimAccess";
 
 const baseUrl = (process.env.ESIM_API_BASE ?? "https://api.esimaccess.com").replace(/\/$/, "");
 const accessCode = process.env.ESIM_ACCESS_CODE?.trim();
 const secret = process.env.ESIM_SECRET?.trim();
 const partnerId = process.env.ESIM_ACCESS_PARTNER_ID?.trim();
-const defaultMarkupPct = Number.parseFloat(process.env.DEFAULT_MARKUP_PCT ?? "20");
 
 function requireConfig() {
   if (!baseUrl) {
@@ -20,26 +21,65 @@ function requireConfig() {
   }
 }
 
-async function esimRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  requireConfig();
-  const url = `${baseUrl}/${path.replace(/^\//, "")}`;
-  const headers: HeadersInit = {
-    Accept: "application/json",
-    ...(init.body ? { "Content-Type": "application/json" } : {}),
-    Authorization: accessCode?.startsWith("Bearer ") ? accessCode : `Bearer ${accessCode}`,
-    "X-API-Key": accessCode,
-    ...(secret ? { "X-API-Secret": secret } : {}),
-    Authorization: `Bearer ${accessCode}`,
-    "X-API-Key": accessCode,
+interface EsimRequestInit extends Omit<RequestInit, "body"> {
+  body?: unknown;
+}
+
+function buildSignatureHeaders(body: string): HeadersInit {
+  if (!accessCode || !secret) {
+    throw new Error("eSIM Access credentials are not configured");
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const requestId = crypto.randomUUID();
+  const signData = `${timestamp}${requestId}${accessCode}${body}`;
+  const signature = crypto.createHmac("sha256", secret).update(signData).digest("hex").toLowerCase();
+
+  const headers: Record<string, string> = {
+    "RT-AccessCode": accessCode,
+    "RT-Timestamp": timestamp,
+    "RT-RequestID": requestId,
+    "RT-Signature": signature,
   };
 
+  if (partnerId) {
+    headers["RT-PartnerID"] = partnerId;
+  }
+
+  return headers;
+}
+
+async function esimRequest<T>(path: string, init: EsimRequestInit = {}): Promise<T> {
+  requireConfig();
+  const url = `${baseUrl}/${path.replace(/^\//, "")}`;
+  const { body: rawBody, headers: initHeaders, cache, ...rest } = init;
+
+  const hasBody = typeof rawBody !== "undefined";
+  const serializedBody =
+    typeof rawBody === "string"
+      ? rawBody
+      : hasBody
+        ? JSON.stringify(rawBody ?? {})
+        : undefined;
+  const authCode = accessCode!;
+  const signatureHeaders = buildSignatureHeaders(serializedBody ?? "");
+
+  const headers: HeadersInit = {
+    Accept: "application/json",
+    ...(serializedBody ? { "Content-Type": "application/json" } : {}),
+    Authorization: authCode,
+    "X-API-Key": authCode,
+    ...signatureHeaders,
+    ...(initHeaders ?? {}),
+  };
+
+  const requestBody = typeof serializedBody === "undefined" ? undefined : serializedBody;
+
   const response = await fetch(url, {
-    ...init,
-    headers: {
-      ...headers,
-      ...(init.headers ?? {}),
-    },
-    cache: "no-store",
+    ...rest,
+    headers,
+    body: requestBody,
+    cache: cache ?? "no-store",
   });
 
   if (!response.ok) {
@@ -89,7 +129,7 @@ interface RawCountriesResponse extends ApiEnvelope {
 export async function loadEsimCountries(): Promise<EsimCountry[]> {
   const data = await esimRequest<RawCountriesResponse>("api/v1/open/location/country/list", {
     method: "POST",
-    body: JSON.stringify({}),
+    body: {},
   });
   ensureSuccess(data);
   const countries =
@@ -159,6 +199,21 @@ interface RawPlansResponse extends ApiEnvelope {
   packages?: RawPlan[];
   packageList?: RawPlan[];
   obj?: { packageList?: RawPlan[] } | RawPlan[];
+}
+
+function normalizePriceField(value: unknown): number {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return value > 100 ? Math.round(value) : Math.round(value * 100);
+  }
+  if (typeof value === "string") {
+    const cleaned = value.trim();
+    if (!cleaned) return 0;
+    const parsed = Number.parseFloat(cleaned.replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+    return parsed > 100 ? Math.round(parsed) : Math.round(parsed * 100);
+  }
+  return 0;
 }
 
 function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant | null {
@@ -235,12 +290,19 @@ function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant |
     return dataLabel.toLowerCase().includes("unlimit") ? "unlimited" : "metered";
   })();
 
-  const markupSource = plan.retail_price ?? plan.retailPrice;
-  const markupPct = Number.isFinite(markupSource)
-    ? computeMarkupFromRetail(wholesaleCents, Number(markupSource))
-    : defaultMarkupPct;
-
-  const retailCents = Math.ceil(wholesaleCents * (1 + markupPct / 100));
+  const retailCandidates = [
+    plan.retailPrice,
+    plan.retail_price,
+    plan.price,
+    plan.wholesale,
+    plan.wholesale_cents,
+    plan.wholesaleCents,
+  ];
+  const normalizedRetailCandidate = retailCandidates
+    .map((candidate) => normalizePriceField(candidate))
+    .find((value) => value > 0);
+  const retailCents = normalizedRetailCandidate ? Math.max(normalizedRetailCandidate, wholesaleCents) : wholesaleCents;
+  const markupPct = wholesaleCents > 0 ? Math.max(0, ((retailCents - wholesaleCents) / wholesaleCents) * 100) : 0;
 
   return {
     slug,
@@ -258,17 +320,11 @@ function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant |
   };
 }
 
-function computeMarkupFromRetail(wholesaleCents: number, rawRetail: number): number {
-  const retailCents = rawRetail > 100 ? rawRetail : Math.round(rawRetail * 100);
-  if (retailCents <= wholesaleCents) return defaultMarkupPct;
-  return ((retailCents - wholesaleCents) / wholesaleCents) * 100;
-}
-
 export async function loadEsimPlans(countryCode: string): Promise<EsimPlanVariant[]> {
   if (!countryCode) return [];
   const data = await esimRequest<RawPlansResponse>("api/v1/open/package/list", {
     method: "POST",
-    body: JSON.stringify({ locationCode: countryCode }),
+    body: { locationCode: countryCode },
   });
   ensureSuccess(data);
   const plans =
@@ -326,7 +382,7 @@ export async function issueEsimOrder(payload: CreateOrderPayload): Promise<Issue
 
   const response = await esimRequest<RawOrderResponse>("api/v1/open/esim/order", {
     method: "POST",
-    body: JSON.stringify(body),
+    body,
   });
   ensureSuccess(response);
 

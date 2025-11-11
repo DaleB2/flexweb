@@ -288,7 +288,7 @@ export default function PlanSearch() {
                   <p className={styles.planPrice}>{formatCurrency(plan.retailPriceCents, currency)}</p>
                 </div>
                 <p className={styles.planMeta}>
-                  Includes taxes, activation, and {markupPct}% Flex service margin. Wholesale: {formatCurrency(plan.wholesalePriceCents, currency)}.
+                  Includes taxes, activation, and support. Wholesale: {formatCurrency(plan.wholesalePriceCents, currency)}.
                 </p>
                 <div className={styles.planActions}>
                   <span className={styles.supportingCopy}>Instant QR delivery · works in phones & hotspots</span>

@@ -61,8 +61,8 @@ export default function DestinationPlans({ countryCode, countryName, plans, mark
         <span className={styles.kicker}>Unlimited data</span>
         <h2 className={styles.title}>Plans ready for {countryName}</h2>
         <p className={styles.description}>
-          Pick how much data you need and how long you’ll stay. Pricing already includes taxes and Flex’s {markupPct}% service
-          margin so there are no surprises.
+          Pick how much data you need and how long you’ll stay. Pricing comes straight from our partner and already includes
+          taxes, activation, and support so there are no surprises.
         </p>
       </div>
       <div className={styles.grid}>
