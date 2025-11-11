@@ -23,6 +23,10 @@ export function CheckoutSheet({ open, onOpenChange, onPlanAnother }: CheckoutShe
         <span id="flex-checkout-description" className="sr-only">
           Flex eSIM checkout flow with stacked cards for destination, plan, account, payment, and confirmation steps.
         </span>
+        <CheckoutFlow
+          onClose={() => onOpenChange(false)}
+          onPlanAnother={onPlanAnother}
+        />
         <CheckoutFlow onClose={() => onOpenChange(false)} onPlanAnother={onPlanAnother} />
       </SheetContent>
     </Sheet>

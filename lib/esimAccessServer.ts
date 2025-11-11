@@ -8,7 +8,6 @@ const baseUrl = (process.env.ESIM_API_BASE ?? "https://api.esimaccess.com").repl
 const accessCode = process.env.ESIM_ACCESS_CODE?.trim();
 const secret = process.env.ESIM_SECRET?.trim();
 const partnerId = process.env.ESIM_ACCESS_PARTNER_ID?.trim();
-const defaultMarkupPct = Number.parseFloat(process.env.DEFAULT_MARKUP_PCT ?? "20");
 
 function requireConfig() {
   if (!baseUrl) {
@@ -31,6 +30,7 @@ function buildSignatureHeaders(body: string): HeadersInit {
     throw new Error("eSIM Access credentials are not configured");
   }
 
+  const timestamp = Math.floor(Date.now() / 1000).toString();
   const timestamp = Date.now().toString();
   const requestId = crypto.randomUUID();
   const signData = `${timestamp}${requestId}${accessCode}${body}`;
@@ -69,15 +69,19 @@ async function esimRequest<T>(path: string, init: EsimRequestInit = {}): Promise
   const headers: HeadersInit = {
     Accept: "application/json",
     ...(serializedBody ? { "Content-Type": "application/json" } : {}),
+    Authorization: authCode,
     Authorization: authorization,
     "X-API-Key": authCode,
     ...signatureHeaders,
     ...(initHeaders ?? {}),
   };
 
+  const requestBody = typeof serializedBody === "undefined" ? undefined : serializedBody;
+
   const response = await fetch(url, {
     ...rest,
     headers,
+    body: requestBody,
     body: serializedBody,
     cache: cache ?? "no-store",
   });
@@ -201,6 +205,21 @@ interface RawPlansResponse extends ApiEnvelope {
   obj?: { packageList?: RawPlan[] } | RawPlan[];
 }
 
+function normalizePriceField(value: unknown): number {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return value > 100 ? Math.round(value) : Math.round(value * 100);
+  }
+  if (typeof value === "string") {
+    const cleaned = value.trim();
+    if (!cleaned) return 0;
+    const parsed = Number.parseFloat(cleaned.replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+    return parsed > 100 ? Math.round(parsed) : Math.round(parsed * 100);
+  }
+  return 0;
+}
+
 function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant | null {
   const slug = plan.slug ?? plan.planSlug ?? plan.packageCode ?? plan.package_code ?? plan.package;
   if (!slug) return null;
@@ -275,12 +294,19 @@ function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant |
     return dataLabel.toLowerCase().includes("unlimit") ? "unlimited" : "metered";
   })();
 
-  const markupSource = plan.retail_price ?? plan.retailPrice;
-  const markupPct = Number.isFinite(markupSource)
-    ? computeMarkupFromRetail(wholesaleCents, Number(markupSource))
-    : defaultMarkupPct;
-
-  const retailCents = Math.ceil(wholesaleCents * (1 + markupPct / 100));
+  const retailCandidates = [
+    plan.retailPrice,
+    plan.retail_price,
+    plan.price,
+    plan.wholesale,
+    plan.wholesale_cents,
+    plan.wholesaleCents,
+  ];
+  const normalizedRetailCandidate = retailCandidates
+    .map((candidate) => normalizePriceField(candidate))
+    .find((value) => value > 0);
+  const retailCents = normalizedRetailCandidate ? Math.max(normalizedRetailCandidate, wholesaleCents) : wholesaleCents;
+  const markupPct = wholesaleCents > 0 ? Math.max(0, ((retailCents - wholesaleCents) / wholesaleCents) * 100) : 0;
 
   return {
     slug,
@@ -296,12 +322,6 @@ function buildPlanVariant(countryCode: string, plan: RawPlan): EsimPlanVariant |
     notes: plan.description,
     countryCode,
   };
-}
-
-function computeMarkupFromRetail(wholesaleCents: number, rawRetail: number): number {
-  const retailCents = rawRetail > 100 ? rawRetail : Math.round(rawRetail * 100);
-  if (retailCents <= wholesaleCents) return defaultMarkupPct;
-  return ((retailCents - wholesaleCents) / wholesaleCents) * 100;
 }
 
 export async function loadEsimPlans(countryCode: string): Promise<EsimPlanVariant[]> {
