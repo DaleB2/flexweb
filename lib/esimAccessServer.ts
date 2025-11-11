@@ -31,6 +31,7 @@ function buildSignatureHeaders(body: string): HeadersInit {
   }
 
   const timestamp = Math.floor(Date.now() / 1000).toString();
+  const timestamp = Date.now().toString();
   const requestId = crypto.randomUUID();
   const signData = `${timestamp}${requestId}${accessCode}${body}`;
   const signature = crypto.createHmac("sha256", secret).update(signData).digest("hex").toLowerCase();
@@ -63,11 +64,13 @@ async function esimRequest<T>(path: string, init: EsimRequestInit = {}): Promise
         : undefined;
   const authCode = accessCode!;
   const signatureHeaders = buildSignatureHeaders(serializedBody ?? "");
+  const authorization = authCode.startsWith("Bearer ") ? authCode : `Bearer ${authCode}`;
 
   const headers: HeadersInit = {
     Accept: "application/json",
     ...(serializedBody ? { "Content-Type": "application/json" } : {}),
     Authorization: authCode,
+    Authorization: authorization,
     "X-API-Key": authCode,
     ...signatureHeaders,
     ...(initHeaders ?? {}),
@@ -79,6 +82,7 @@ async function esimRequest<T>(path: string, init: EsimRequestInit = {}): Promise
     ...rest,
     headers,
     body: requestBody,
+    body: serializedBody,
     cache: cache ?? "no-store",
   });
 

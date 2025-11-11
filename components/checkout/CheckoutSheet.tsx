@@ -17,7 +17,6 @@ export function CheckoutSheet({ open, onOpenChange, onPlanAnother }: CheckoutShe
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        title="Flex Checkout"
         aria-describedby="flex-checkout-description"
         className={SHEET_CONTENT_CLASSES}
       >
@@ -28,7 +27,9 @@ export function CheckoutSheet({ open, onOpenChange, onPlanAnother }: CheckoutShe
           onClose={() => onOpenChange(false)}
           onPlanAnother={onPlanAnother}
         />
+        <CheckoutFlow onClose={() => onOpenChange(false)} onPlanAnother={onPlanAnother} />
       </SheetContent>
     </Sheet>
   );
 }
+
